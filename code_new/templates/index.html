@@ -1,0 +1,37 @@
+<body onload="on_load();">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 offset-lg-2">
+        <h2 class="mt-5">Demo Project</h2>
+        <form method="post" action="{{ url_for('tasks') }}">
+          <input type="submit" value="Start" name="status" id="status"/>
+          <input type="submit" value="Predict" name="predict" id="predict" />
+        </form>
+        <img src="{{ url_for('video_feed') }}" height="80%" />
+      </div>
+    </div>
+  </div>
+  <script>
+	var data = '{{ data|tojson }}';
+	data = data.replace(/\s/g, '');
+	data = data.replace(/\\/g, '/');
+	data = JSON.parse(data);
+
+	function on_load(){
+		if(data["switch"] == 1){
+			document.getElementById("status").setAttribute("value","Stop")
+		}else{
+			document.getElementById("status").setAttribute("value","Start")
+		}
+
+		if(data["predict"] == 1){
+			document.getElementById("predict").setAttribute("value","Predicting...")
+		}else{
+			document.getElementById("predict").setAttribute("value","Predict")
+		}
+
+
+	}
+
+  </script>
+</body>
