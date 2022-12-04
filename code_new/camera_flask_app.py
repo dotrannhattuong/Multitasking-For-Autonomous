@@ -1,4 +1,5 @@
-from flask import Flask, render_template, Response, request
+import base64
+from flask import Flask, render_template, Response, request, jsonify
 import cv2
 import datetime, time
 import os, sys
@@ -28,12 +29,6 @@ app = Flask(__name__, template_folder='./templates')
 
 
 camera = cv2.VideoCapture(0)
-
-def record(out):
-    global rec_frame
-    while(rec):
-        time.sleep(0.05)
-        out.write(rec_frame)
 
 
 def detect_face(frame):
@@ -84,6 +79,33 @@ def index():
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/predict_client', methods = ["POST"])
+def predict_client():
+    # try:
+    data = request.get_json()
+    _imageBase64 = data["imageBase64"]
+    if(_imageBase64 != None and _imageBase64 != ""):
+        arr = np.frombuffer(base64.b64decode(_imageBase64), np.uint8)
+        frame = cv2.imdecode(arr, 1)
+        if data["predict"]:
+            frame = detect_face(frame)
+    
+            retval, buffer = cv2.imencode('.jpg', frame)
+            strBase64 = base64.b64encode(buffer)
+            return jsonify({
+                'imageBase64': strBase64.decode("ascii"),
+            })
+        else:
+            return jsonify({
+                'imageBase64': "1",
+            })
+
+    # except Exception as e:
+    #     print(e)
+    #     return Response({
+    #         'imageBase64': '',
+    #     }, status=400, content_type="application/json")
+
 @app.route('/requests',methods=['POST','GET'])
 def tasks():
     global switch,camera
@@ -115,7 +137,7 @@ def tasks():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5002)
+    app.run(debug = True, host="0.0.0.0", port=5002)
     
 camera.release()
 cv2.destroyAllWindows()     
