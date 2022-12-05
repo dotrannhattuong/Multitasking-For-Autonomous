@@ -8,12 +8,9 @@ from threading import Thread
 
 
 global capture,rec_frame, grey, switch, neg, face, rec, out 
-capture=0
-grey=0
-neg=0
 predict=0
-switch=1
-rec=0
+switch=0
+show=False
 
 #make shots directory to save pics
 try:
@@ -51,23 +48,25 @@ def detect_face(frame):
 
 def gen_frames():  # generate frame by frame from camera
     global out, capture,rec_frame
-    while True:
-        success, frame = camera.read() 
-        if success:
-            if(predict):                
-                frame= detect_face(frame)
-            
+    if show: 
+        while True:
+            success, frame = camera.read() 
+            if success:
+                if(predict):                
+                    frame= detect_face(frame)
                 
-            try:
-                ret, buffer = cv2.imencode('.jpg', cv2.flip(frame,1))
-                frame = buffer.tobytes()
-                yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            except Exception as e:
+
+                
+                try:
+                    ret, buffer = cv2.imencode('.jpg', cv2.flip(frame,1))
+                    frame = buffer.tobytes()
+                    yield (b'--frame\r\n'
+                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                except Exception as e:
+                    pass
+                    
+            else:
                 pass
-                
-        else:
-            pass
 
 
 @app.route('/')
@@ -108,14 +107,19 @@ def predict_client():
 
 @app.route('/requests',methods=['POST','GET'])
 def tasks():
-    global switch,camera
+    global switch,camera, show
     if request.method == 'POST':
         if  request.form.get('predict') in ['Predict', 'Predicting...']:
+            
             global predict
             predict=not predict 
             if(predict):
                 time.sleep(.02)   
         elif  request.form.get('status') in ['Start', 'Stop']:
+            if request.form.get('status') == "Start":
+                show = True
+            else:
+                show=False
             
             if(switch==1):
                 switch=0
