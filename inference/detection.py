@@ -28,74 +28,78 @@ class Multitasking:
         frame = cv2.resize(frame, (640, 360))
         frame = frame[20:340, :, :]
 
-        with Profiler('inference_all'):
-            preds = self.model(frame, raw=infer_only)
+        try:
+            with Profiler('inference_all'):
+                preds = self.model(frame, raw=infer_only)
 
-        if not infer_only:
+            if not infer_only:
 
-            det_out, lane_out, scn_out = preds
-            boxes = det_out
-            lanes, lanes_cls, lanes_votes = lane_out
+                det_out, lane_out, scn_out = preds
+                boxes = det_out
+                lanes, lanes_cls, lanes_votes = lane_out
 
-            # Classification results
-            w_cls = self.__wtr[scn_out[0].item()]
-            s_cls = self.__scn[scn_out[1].item()]
-            td_cls = self.__td[scn_out[2].item()]
+                # Classification results
+                w_cls = self.__wtr[scn_out[0].item()]
+                s_cls = self.__scn[scn_out[1].item()]
+                td_cls = self.__td[scn_out[2].item()]
 
-            # Lane clustering
-            with Profiler('lane_clustering'):
-                lane_clusters = fast_clustering(lanes, lanes_cls, lanes_votes)
+                # Lane clustering
+                with Profiler('lane_clustering'):
+                    lane_clusters = fast_clustering(lanes, lanes_cls, lanes_votes)
 
-            # Draw keypoints
-            with Profiler('lane_drawing'):
-                for cla, cls_clusters in enumerate(lane_clusters):
-                    for cl in cls_clusters:
+                # Draw keypoints
+                with Profiler('lane_drawing'):
+                    for cla, cls_clusters in enumerate(lane_clusters):
+                        for cl in cls_clusters:
 
-                        col = lancol[cla]
-                        if cl.shape[0] < 5:
-                            continue
+                            col = lancol[cla]
+                            if cl.shape[0] < 5:
+                                continue
 
-                        x = cl[:, 0]
-                        y = cl[:, 1]
+                            x = cl[:, 0]
+                            y = cl[:, 1]
 
-                        # calculate polynomial
-                        try:
-                            z = np.polyfit(x, y, 2)
-                            f = np.poly1d(z)
-                        except ValueError:
-                            continue
+                            # calculate polynomial
+                            try:
+                                z = np.polyfit(x, y, 2)
+                                f = np.poly1d(z)
+                            except ValueError:
+                                continue
 
-                        # calculate new x's and y's
-                        x_new = np.linspace(min(x), max(x), len(x) * 2)
-                        y_new = f(x_new)
+                            # calculate new x's and y's
+                            x_new = np.linspace(min(x), max(x), len(x) * 2)
+                            y_new = f(x_new)
 
-                        for cx, cy in zip(x_new, y_new):
-                            frame = cv2.circle(frame, (int(cx), int(cy)), 1, col, thickness=2, )
+                            for cx, cy in zip(x_new, y_new):
+                                frame = cv2.circle(frame, (int(cx), int(cy)), 1, col, thickness=2, )
 
-            # Draw boxes
-            with Profiler('det_drawing'):
-                for b in boxes:
-                    cls = DET_CLS_IND[int(b[5])].split(" ")[-1]
-                    tl = (int(b[2]), int(b[3]))
-                    br = (int(b[0]), int(b[1]))
+                # Draw boxes
+                with Profiler('det_drawing'):
+                    for b in boxes:
+                        cls = DET_CLS_IND[int(b[5])].split(" ")[-1]
+                        tl = (int(b[2]), int(b[3]))
+                        br = (int(b[0]), int(b[1]))
 
-                    color = (0, 255, 0) if b[6] < 0.5 else (0,0,255)
-                    cv2.rectangle(frame, tl, br, color, 2)
+                        color = (0, 255, 0) if b[6] < 0.5 else (0,0,255)
+                        cv2.rectangle(frame, tl, br, color, 2)
 
-                    (text_width, text_height), _ = cv2.getTextSize(cls, cv2.FONT_HERSHEY_DUPLEX, 0.3, 1)
-                    cv2.rectangle(frame, br, (br[0] + text_width - 1, br[1] + text_height - 1),
-                                color, cv2.FILLED)
-                    cv2.putText(frame, cls, (br[0], br[1] + text_height - 1), cv2.FONT_HERSHEY_DUPLEX,
-                                0.3, 0, 1, cv2.LINE_AA)
+                        (text_width, text_height), _ = cv2.getTextSize(cls, cv2.FONT_HERSHEY_DUPLEX, 0.3, 1)
+                        cv2.rectangle(frame, br, (br[0] + text_width - 1, br[1] + text_height - 1),
+                                    color, cv2.FILLED)
+                        cv2.putText(frame, cls, (br[0], br[1] + text_height - 1), cv2.FONT_HERSHEY_DUPLEX,
+                                    0.3, 0, 1, cv2.LINE_AA)
 
-            # Add text
-            with Profiler('cls_drawing'):
-                text = f"WEATHER: {w_cls}   SCENE: {s_cls}   DAYTIME: {td_cls}"
-                frame = cv2.rectangle(frame, (10, 5), (550, 25), (0, 0, 0), -1)
-                frame = cv2.putText(frame, text, (15, 20), cv2.FONT_HERSHEY_DUPLEX, 0.5,
-                                    (255,255,255), 1, cv2.LINE_AA, False)
+                # Add text
+                with Profiler('cls_drawing'):
+                    text = f"WEATHER: {w_cls}   SCENE: {s_cls}   DAYTIME: {td_cls}"
+                    frame = cv2.rectangle(frame, (10, 5), (550, 25), (0, 0, 0), -1)
+                    frame = cv2.putText(frame, text, (15, 20), cv2.FONT_HERSHEY_DUPLEX, 0.5,
+                                        (255,255,255), 1, cv2.LINE_AA, False)
 
-            # cv2.imshow("result", frame)
+                # cv2.imshow("result", frame)
+        except:
+            print('error')
+            pass
 
         return frame
 

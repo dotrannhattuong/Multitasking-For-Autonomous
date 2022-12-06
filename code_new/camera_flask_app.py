@@ -47,7 +47,6 @@ def detect_face(frame):
  
 
 def gen_frames():  # generate frame by frame from camera
-    global out, capture,rec_frame
     if show: 
         while True:
             success, frame = camera.read() 
@@ -88,11 +87,14 @@ def predict_client():
         frame = cv2.imdecode(arr, 1)
         if data["predict"]:
             frame = detect_face(frame)
-    
+            H, W = frame.shape[:2]
+            print(frame.shape)
             retval, buffer = cv2.imencode('.jpg', frame)
             strBase64 = base64.b64encode(buffer)
             return jsonify({
                 'imageBase64': strBase64.decode("ascii"),
+                'w': W,
+                'h': H
             })
         else:
             return jsonify({

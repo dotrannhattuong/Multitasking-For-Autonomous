@@ -28,7 +28,6 @@ app = Flask(__name__, template_folder='./templates')
 camera = cv2.VideoCapture(0)
 
 def gen_frames():  # generate frame by frame from camera
-    global out, capture,rec_frame
     if show: 
         while True:
             success, frame = camera.read() 
@@ -67,11 +66,14 @@ def predict_client():
         frame = cv2.imdecode(arr, 1)
         if data["predict"]:
             frame = model(frame)
+            H, W = frame.shape[:2]
     
             retval, buffer = cv2.imencode('.jpg', frame)
             strBase64 = base64.b64encode(buffer)
             return jsonify({
                 'imageBase64': strBase64.decode("ascii"),
+                'w': W,
+                'h': H
             })
         else:
             return jsonify({

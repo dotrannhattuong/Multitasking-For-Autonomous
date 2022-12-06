@@ -19,10 +19,10 @@
           <input type="button" value="Start Client" name="start_client"  id="start_client" onclick="show_webcam_client()" />
           <input type="button" value="Predict Client" name="predict_client"  id="predict_client" onclick="predict_webcam_client()" />
         </form>
-        <img src="{{ url_for('video_feed') }}"  height="80%" />
-        <video id="video" width="40%" height="80%" autoplay controls ></video>
-		<canvas id="canvas" width="500px" height="390px" style="display: none;"></canvas>
-		<image src="" id = "photo" style="display: none;"/>
+        <img src="{{ url_for('video_feed') }}"  height="400px" />
+        <video id="video" width="700px" height="400px" autoplay controls ></video>
+		<canvas id="canvas" width="700px" height="400px" style="display: none;"></canvas>
+		<image src="" width="700px" height="400px" id = "photo" style="display: none;"/>
       </div>
     </div>
   </div>
@@ -62,33 +62,33 @@
 
 	async function show_webcam_client(){
 			let video = document.getElementById('video');
-			let btn_start_client = document.getElementById("start_client")
-			let v = btn_start_client.getAttribute("value")
-			let canvas = document.getElementById("canvas")
+			let btn_start_client = document.getElementById("start_client");
+			let v = btn_start_client.getAttribute("value");
+			let canvas = document.getElementById("canvas");
 
-			document.getElementById("photo").style.display="none"
+			document.getElementById("photo").style.display="none";
 
 			if(v == "Start Client"){
 				let stream = await navigator.mediaDevices.getUserMedia({ video: true});
 				video.srcObject = stream;
 				localstream = stream;
 				video.setAttribute("style", "display:inline");
-				btn_start_client.setAttribute("value","Stop Client")
+				btn_start_client.setAttribute("value","Stop Client");
 			}else{
-				is_predict_client = false
+				is_predict_client = false;
 				localstream.getTracks()[0].stop();
 				video.pause();
 				video.src = "";
 				btn_start_client.setAttribute("value","Start Client");
 				video.setAttribute("style", "display:none");
-				document.getElementById("predict_client").setAttribute("value", "Predict Client")
+				document.getElementById("predict_client").setAttribute("value", "Predict Client");
 
 			}
 		}
 
 	function predict_webcam_client(){
 		// /////////////
-		if(document.getElementById("start_client").getAttribute("value") != "Start Client" || document.getElementById("video").getElementsByTagName("source").length != 0){
+		if(document.getElementById("start_client").getAttribute("value") != "Start Client" || document.getElementById("video").src.length != 0){
 			let predict_client = document.getElementById("predict_client")
 			if (predict_client.getAttribute("value") == "Predict Client"){
 				predict_client.setAttribute("value","Predicting client...")
@@ -124,14 +124,16 @@
 				cache: false,
 				contentType: 'application/json', 
 				success: function(res){
-					let photo = document.getElementById("photo")
+					let photo = document.getElementById("photo");
 					let imageBase64 = res.imageBase64;
 					if(imageBase64 == "1"){
-						photo.style.display = "none"
+						photo.style.display = "none";
 					}else{
 						photo.src = "data:image/png;base64," + imageBase64;
-						photo.style.display = "inline"
-						send_image()
+						photo.style.display = "inline";
+						photo.width = res.w;
+						photo.height = res.h;
+						send_image();
 					}
 				},
 				error: function(error){
