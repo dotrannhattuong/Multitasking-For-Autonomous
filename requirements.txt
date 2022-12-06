@@ -15,3 +15,4 @@ numba==0.55.1
 onnxruntime
 torchinfo
 path
+flask

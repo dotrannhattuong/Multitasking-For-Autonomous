@@ -5,6 +5,7 @@ import datetime, time
 import os, sys
 import numpy as np
 from threading import Thread
+from detection import Multitasking
 
 
 global capture,rec_frame, grey, switch, neg, face, rec, out 
@@ -18,33 +19,13 @@ try:
 except OSError as error:
     pass
 
-#Load pretrained face detection model    
-net = cv2.dnn.readNetFromCaffe('./saved_model/deploy.prototxt.txt', './saved_model/res10_300x300_ssd_iter_140000.caffemodel')
+# Load model
+model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx')     
 
 #instatiate flask app  
 app = Flask(__name__, template_folder='./templates')
 
-
 camera = cv2.VideoCapture(0)
-
-
-def detect_face(frame):
-    global net
-    (h, w) = frame.shape[:2]
-    blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0,
-        (300, 300), (104.0, 177.0, 123.0))   
-    net.setInput(blob)
-    detections = net.forward()
-    confidence = detections[0, 0, 0, 2]
-
-    if confidence < 0.5:            
-            return frame           
-
-    box = detections[0, 0, 0, 3:7] * np.array([w, h, w, h])
-    (startX, startY, endX, endY) = box.astype("int")
-    cv2.rectangle(frame, (startX, startY), (endX, endY), (255, 0, 0), 2)
-    return frame
- 
 
 def gen_frames():  # generate frame by frame from camera
     global out, capture,rec_frame
@@ -53,9 +34,7 @@ def gen_frames():  # generate frame by frame from camera
             success, frame = camera.read() 
             if success:
                 if(predict):                
-                    frame= detect_face(frame)
-                
-
+                    frame= model(frame)
                 
                 try:
                     ret, buffer = cv2.imencode('.jpg', cv2.flip(frame,1))
@@ -87,7 +66,7 @@ def predict_client():
         arr = np.frombuffer(base64.b64decode(_imageBase64), np.uint8)
         frame = cv2.imdecode(arr, 1)
         if data["predict"]:
-            frame = detect_face(frame)
+            frame = model(frame)
     
             retval, buffer = cv2.imencode('.jpg', frame)
             strBase64 = base64.b64encode(buffer)
@@ -138,7 +117,6 @@ def tasks():
         'predict': predict
     }
     return render_template('index.html', data = data)
-
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002)

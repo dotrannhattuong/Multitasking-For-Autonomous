@@ -1,2 +1,3 @@
 /weights/*
 /videos/*
+*__pycache__

@@ -1,0 +1,201 @@
+<!-- <header>
+    <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <title>DEMO WEB</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+</header> -->
+<body onload="on_load();">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 offset-lg-2">
+        <h2 class="mt-5">Demo Project</h2>
+        <form method="post" action="{{ url_for('tasks') }}">
+          <input type="submit" value="Start" name="status" id="status"/>
+          <input type="submit" value="Predict" name="predict" id="predict" />
+          <input type="file"  id="get_file" />
+		  
+          <input type="button" value="Start Client" name="start_client"  id="start_client" onclick="show_webcam_client()" />
+          <input type="button" value="Predict Client" name="predict_client"  id="predict_client" onclick="predict_webcam_client()" />
+        </form>
+        <img src="{{ url_for('video_feed') }}"  height="80%" />
+        <video id="video" width="40%" height="80%" autoplay controls ></video>
+		<canvas id="canvas" width="500px" height="390px" style="display: none;"></canvas>
+		<image src="" id = "photo" style="display: none;"/>
+      </div>
+    </div>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script>
+	var data = '{{ data|tojson }}';
+	data = data.replace(/\s/g, '');
+	data = data.replace(/\\/g, '/');
+	data = JSON.parse(data);
+
+	var localstream;
+	var is_predict_client = false;
+	
+
+	function on_load(){
+		document.getElementById("video").style.display = "none"
+		if(data["switch"] == 1){
+			document.getElementById("status").setAttribute("value","Stop")
+		}else{
+			document.getElementById("status").setAttribute("value","Start")
+		}
+
+		if(data["predict"] == 1){
+			document.getElementById("predict").setAttribute("value","Predicting...")
+		}else{
+			document.getElementById("predict").setAttribute("value","Predict")
+		}
+	}
+
+	document.getElementById("get_file").onchange = function(event) {
+		let video = document.getElementById("video");
+		let file = event.target.files[0];
+		let blobURL = URL.createObjectURL(file);
+		video.style.display='inline';
+		video.src = blobURL;
+	}
+
+	async function show_webcam_client(){
+			let video = document.getElementById('video');
+			let btn_start_client = document.getElementById("start_client")
+			let v = btn_start_client.getAttribute("value")
+			let canvas = document.getElementById("canvas")
+
+			document.getElementById("photo").style.display="none"
+
+			if(v == "Start Client"){
+				let stream = await navigator.mediaDevices.getUserMedia({ video: true});
+				video.srcObject = stream;
+				localstream = stream;
+				video.setAttribute("style", "display:inline");
+				btn_start_client.setAttribute("value","Stop Client")
+			}else{
+				is_predict_client = false
+				localstream.getTracks()[0].stop();
+				video.pause();
+				video.src = "";
+				btn_start_client.setAttribute("value","Start Client");
+				video.setAttribute("style", "display:none");
+				document.getElementById("predict_client").setAttribute("value", "Predict Client")
+
+			}
+		}
+
+	function predict_webcam_client(){
+		// /////////////
+		if(document.getElementById("start_client").getAttribute("value") != "Start Client" || document.getElementById("video").getElementsByTagName("source").length != 0){
+			let predict_client = document.getElementById("predict_client")
+			if (predict_client.getAttribute("value") == "Predict Client"){
+				predict_client.setAttribute("value","Predicting client...")
+				is_predict_client = true
+				send_image()
+			}else{
+				is_predict_client = false
+				predict_client.setAttribute("value","Predict Client")
+			}
+		}
+		
+	}
+
+	function send_image(){
+		let video = document.getElementById('video');
+		let canvas = document.getElementById("canvas");
+		canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+		let image_data_url = canvas.toDataURL('image/jpeg');
+		image_data_url = image_data_url.replace("data:image/jpeg;base64,", "")
+		image_data_url = image_data_url.replace("data:image/png;base64,", "")
+
+		var data = {
+			'imageBase64': image_data_url,
+			"predict": is_predict_client
+		}
+
+		host_request = "/predict_client"
+		$.ajax({
+				url: host_request, 
+				type: "POST",
+				data: JSON.stringify(data),
+				dataType: "json", 
+				cache: false,
+				contentType: 'application/json', 
+				success: function(res){
+					let photo = document.getElementById("photo")
+					let imageBase64 = res.imageBase64;
+					if(imageBase64 == "1"){
+						photo.style.display = "none"
+					}else{
+						photo.src = "data:image/png;base64," + imageBase64;
+						photo.style.display = "inline"
+						send_image()
+					}
+				},
+				error: function(error){
+					// console.log(error)
+					console.log("Error")
+				}
+				});
+	}
+
+	
+
+	
+
+	// function show_webcam_client(){
+	// 	// Grab elements, create settings, etc.
+		// var video = document.getElementById('video');
+		// var btn_start_client = document.getElementById("start_client")
+	// 	var photo = document.getElementById("photo")
+	// 	var canvas = document.getElementById("canvas");
+	// 	var v = btn_start_client.getAttribute("value")
+	
+	// 	if(v == "Start Client"){
+	// 		if (navigator.mediaDevices.getUserMedia !== null) {
+	// 			var options = { 
+	// 				video:true, 
+	// 				audio:false 
+	// 			};  
+	// 			navigator.webkitGetUserMedia(options, function(stream) { 
+	// 				video.srcObject = stream;
+	// 				localstream = stream;
+	// 				video.play();
+
+	// 				// 
+	// 				console.log("Shape: "+ window.innerWidth * video.width / 100 )
+	// 				console.log("Shape: "+ window.innerHeight * video.height / 100)
+
+					// var width = window.innerWidth * video.width / 100;
+					// var height = window.innerHeight * video.height / 100;
+
+	// 				canvas.width = width;
+	// 				canvas.height = height;
+	// 				canvas.getContext('2d').drawImage(video, 0, 0, width, height);
+	// 				var data = canvas.toDataURL('image/png');
+	// 				photo.setAttribute('src', data);
+	// 				photo.setAttribute("style", "display:inline");
+	// 				// 
+
+	// 				console.log("streaming");
+	// 			}, function(e) { 
+	// 				console.log("background error : " + e.name);
+	// 			}); 
+	// 		}
+	// 		btn_start_client.setAttribute("value","Stop Client")
+	// 	}else{
+			// video.pause();
+			// video.src = "";
+	// 		localstream.getTracks()[0].stop();
+	// 		console.log("video off");
+	// 		btn_start_client.setAttribute("value","Start Client");
+	// 		video.setAttribute("style", "display:none");
+
+	// 		photo.setAttribute("style", "display:none");
+	// 	}
+	// }
+
+  </script>
+</body>
