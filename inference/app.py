@@ -4,20 +4,12 @@ import cv2
 import datetime, time
 import os, sys
 import numpy as np
-from threading import Thread
 from detection import Multitasking
 
-
-global capture,rec_frame, grey, switch, neg, face, rec, out 
-predict=0
-switch=0
+predict=False
+switch=False
 show=False
 
-#make shots directory to save pics
-try:
-    os.mkdir('./shots')
-except OSError as error:
-    pass
 
 # Load model
 model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx')     
@@ -25,7 +17,7 @@ model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx')
 #instatiate flask app  
 app = Flask(__name__, template_folder='./templates')
 
-camera = cv2.VideoCapture(0)
+# camera = cv2.VideoCapture(0)
 
 def gen_frames():  # generate frame by frame from camera
     if show: 
@@ -80,11 +72,6 @@ def predict_client():
                 'imageBase64': "1",
             })
 
-    # except Exception as e:
-    #     print(e)
-    #     return Response({
-    #         'imageBase64': '',
-    #     }, status=400, content_type="application/json")
 
 @app.route('/requests',methods=['POST','GET'])
 def tasks():
@@ -93,23 +80,24 @@ def tasks():
         if  request.form.get('predict') in ['Predict', 'Predicting...']:
             
             global predict
-            predict=not predict 
+            if show:
+                predict=not predict 
             if(predict):
                 time.sleep(.02)   
-        elif  request.form.get('status') in ['Start', 'Stop']:
+        if  request.form.get('status') in ['Start', 'Stop']:
             if request.form.get('status') == "Start":
+                print("Start")
                 show = True
+                switch=True
+                camera = cv2.VideoCapture(0)
             else:
+
                 show=False
-            
-            if(switch==1):
-                switch=0
+                switch=False
+                predict = False
                 camera.release()
                 cv2.destroyAllWindows()
-                
-            else:
-                camera = cv2.VideoCapture(0)
-                switch=1
+                print("Close camera")
                           
                  
     elif request.method=='GET':

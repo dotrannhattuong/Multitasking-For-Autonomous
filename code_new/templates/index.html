@@ -11,7 +11,8 @@
     <div class="row">
       <div class="col-lg-8 offset-lg-2">
         <h2 class="mt-5">Demo Project</h2>
-        <form method="post" action="{{ url_for('tasks') }}">
+        <!-- <form method="post" action="{{ url_for('tasks') }}"> -->
+		  <form method="post" action="/requests" >
           <input type="submit" value="Start" name="status" id="status"/>
           <input type="submit" value="Predict" name="predict" id="predict" />
           <input type="file"  id="get_file" />
@@ -39,7 +40,9 @@
 
 	function on_load(){
 		document.getElementById("video").style.display = "none"
-		if(data["switch"] == 1){
+		console.log(data)
+
+		if(data["switch"] == true){
 			document.getElementById("status").setAttribute("value","Stop")
 		}else{
 			document.getElementById("status").setAttribute("value","Start")

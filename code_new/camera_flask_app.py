@@ -1,22 +1,15 @@
 import base64
 from flask import Flask, render_template, Response, request, jsonify
 import cv2
-import datetime, time
+import time
 import os, sys
 import numpy as np
-from threading import Thread
 
 
-global capture,rec_frame, grey, switch, neg, face, rec, out 
-predict=0
-switch=0
+predict=False
+switch=False
 show=False
 
-#make shots directory to save pics
-try:
-    os.mkdir('./shots')
-except OSError as error:
-    pass
 
 #Load pretrained face detection model    
 net = cv2.dnn.readNetFromCaffe('./saved_model/deploy.prototxt.txt', './saved_model/res10_300x300_ssd_iter_140000.caffemodel')
@@ -24,8 +17,6 @@ net = cv2.dnn.readNetFromCaffe('./saved_model/deploy.prototxt.txt', './saved_mod
 #instatiate flask app  
 app = Flask(__name__, template_folder='./templates')
 
-
-camera = cv2.VideoCapture(0)
 
 
 def detect_face(frame):
@@ -109,29 +100,27 @@ def predict_client():
 
 @app.route('/requests',methods=['POST','GET'])
 def tasks():
-    global switch,camera, show
+    global switch, camera, show
     if request.method == 'POST':
         if  request.form.get('predict') in ['Predict', 'Predicting...']:
             
             global predict
-            predict=not predict 
-            if(predict):
+            if show:
+                predict=not predict 
+            if predict:
                 time.sleep(.02)   
-        elif  request.form.get('status') in ['Start', 'Stop']:
+        if  request.form.get('status') in ['Start', 'Stop']:
             if request.form.get('status') == "Start":
                 show = True
+                switch=True
+                camera = cv2.VideoCapture(0)
             else:
                 show=False
-            
-            if(switch==1):
-                switch=0
+                switch=False
+                predict = False
                 camera.release()
                 cv2.destroyAllWindows()
-                
-            else:
-                camera = cv2.VideoCapture(0)
-                switch=1
-                          
+            
                  
     elif request.method=='GET':
         return render_template('index.html', data = {'switch': switch})
@@ -143,7 +132,7 @@ def tasks():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5002)
+    app.run(host="0.0.0.0", port=5001)
     
 camera.release()
 cv2.destroyAllWindows()     
