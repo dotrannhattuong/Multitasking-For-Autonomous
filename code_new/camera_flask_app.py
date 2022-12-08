@@ -59,6 +59,14 @@ def gen_frames():  # generate frame by frame from camera
                 pass
 
 
+def gen_random():
+    length = np.random.randint(10, 20)
+
+    a = np.random.randint(0, 100, size=(length))
+    b = np.random.randint(0, 100, size=(length))
+
+    return [{"x": int(x), "y":int(y)} for x, y in zip(a, b)]
+
 @app.route('/')
 def index():
     return render_template('index.html', data = {'switch': switch})
@@ -67,6 +75,13 @@ def index():
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route("/visualize", methods = ['POST'])
+def visualize():
+    
+    return jsonify({
+        'data': gen_random()
+    })
 
 @app.route('/predict_client', methods = ["POST"])
 def predict_client():
@@ -132,7 +147,7 @@ def tasks():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=5002)
     
 camera.release()
 cv2.destroyAllWindows()     

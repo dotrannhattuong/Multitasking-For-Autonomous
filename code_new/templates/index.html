@@ -19,15 +19,18 @@
 		  
           <input type="button" value="Start Client" name="start_client"  id="start_client" onclick="show_webcam_client()" />
           <input type="button" value="Predict Client" name="predict_client"  id="predict_client" onclick="predict_webcam_client()" />
+		  <input type="button" value="Start Visualize" name="start_visualize"  id="start_visualize" onclick="visualize()" />
         </form>
         <img src="{{ url_for('video_feed') }}"  height="400px" />
         <video id="video" width="700px" height="400px" autoplay controls ></video>
 		<canvas id="canvas" width="700px" height="400px" style="display: none;"></canvas>
 		<image src="" width="700px" height="400px" id = "photo" style="display: none;"/>
+		<canvas id="myChart"  style="width:500px;max-width:500px;display: none;background: lightgray;"></canvas>
       </div>
     </div>
   </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
   <script>
 	var data = '{{ data|tojson }}';
 	data = data.replace(/\s/g, '');
@@ -36,6 +39,7 @@
 
 	var localstream;
 	var is_predict_client = false;
+	var is_visualize = false;
 	
 
 	function on_load(){
@@ -72,19 +76,30 @@
 			document.getElementById("photo").style.display="none";
 
 			if(v == "Start Client"){
-				let stream = await navigator.mediaDevices.getUserMedia({ video: true});
+				let stream;
+				if(window.outerWidth < window.outerHeight){
+					stream = await navigator.mediaDevices.getUserMedia({ video: {
+																				facingMode: {
+																					exact: "environment",
+																				}
+					}});
+				}else{
+					stream = await navigator.mediaDevices.getUserMedia({ video: {
+																			facingMode: "user"
+																		}});
+				}
 				video.srcObject = stream;
 				localstream = stream;
 				video.setAttribute("style", "display:inline");
-				btn_start_client.setAttribute("value","Stop Client");
+				btn_start_client.setAttribute("value","Stop Client")
 			}else{
-				is_predict_client = false;
+				is_predict_client = false
 				localstream.getTracks()[0].stop();
 				video.pause();
 				video.src = "";
 				btn_start_client.setAttribute("value","Start Client");
 				video.setAttribute("style", "display:none");
-				document.getElementById("predict_client").setAttribute("value", "Predict Client");
+				document.getElementById("predict_client").setAttribute("value", "Predict Client")
 
 			}
 		}
@@ -147,60 +162,69 @@
 	}
 
 	
+	var my_chart;
+	function visualize(){
+		let btn_visualize = document.getElementById("start_visualize");
+		let value = btn_visualize.getAttribute("value");
+		
+		if(value == "Start Visualize"){
+			is_visualize = true;
+			document.getElementById("myChart").setAttribute("style", "width:500px;max-width:500px;display: inline;background: lightgray;");
+			btn_visualize.setAttribute("value", "Stop Visualize");
+			get_data_to_visualize();
+		}else{
+			is_visualize = false;
+			document.getElementById("myChart").setAttribute("style", "display: none");
+			btn_visualize.setAttribute("value", "Start Visualize");
+			
+		}
+		
+		
+	}
 
-	
-
-	// function show_webcam_client(){
-	// 	// Grab elements, create settings, etc.
-		// var video = document.getElementById('video');
-		// var btn_start_client = document.getElementById("start_client")
-	// 	var photo = document.getElementById("photo")
-	// 	var canvas = document.getElementById("canvas");
-	// 	var v = btn_start_client.getAttribute("value")
-	
-	// 	if(v == "Start Client"){
-	// 		if (navigator.mediaDevices.getUserMedia !== null) {
-	// 			var options = { 
-	// 				video:true, 
-	// 				audio:false 
-	// 			};  
-	// 			navigator.webkitGetUserMedia(options, function(stream) { 
-	// 				video.srcObject = stream;
-	// 				localstream = stream;
-	// 				video.play();
-
-	// 				// 
-	// 				console.log("Shape: "+ window.innerWidth * video.width / 100 )
-	// 				console.log("Shape: "+ window.innerHeight * video.height / 100)
-
-					// var width = window.innerWidth * video.width / 100;
-					// var height = window.innerHeight * video.height / 100;
-
-	// 				canvas.width = width;
-	// 				canvas.height = height;
-	// 				canvas.getContext('2d').drawImage(video, 0, 0, width, height);
-	// 				var data = canvas.toDataURL('image/png');
-	// 				photo.setAttribute('src', data);
-	// 				photo.setAttribute("style", "display:inline");
-	// 				// 
-
-	// 				console.log("streaming");
-	// 			}, function(e) { 
-	// 				console.log("background error : " + e.name);
-	// 			}); 
-	// 		}
-	// 		btn_start_client.setAttribute("value","Stop Client")
-	// 	}else{
-			// video.pause();
-			// video.src = "";
-	// 		localstream.getTracks()[0].stop();
-	// 		console.log("video off");
-	// 		btn_start_client.setAttribute("value","Start Client");
-	// 		video.setAttribute("style", "display:none");
-
-	// 		photo.setAttribute("style", "display:none");
-	// 	}
-	// }
+	function get_data_to_visualize(){
+		$.ajax({
+				url: "/visualize", 
+				type: "POST",
+				dataType: "json", 
+				cache: false,
+				success: function(res){
+					if(my_chart){
+						my_chart.destroy();
+					}
+					if(is_visualize){
+						console.log(res.data)
+						my_chart = new Chart("myChart", {
+						type: "scatter",
+						data: {
+							datasets: [{
+							pointRadius: 4,
+							pointBackgroundColor: "rgb(0,0,255)",
+							data: res.data,
+							}]
+						},
+						options: {
+							legend: {display: false},
+							scales: {
+							xAxes: [{ticks: {min: -10, max:110}}],
+							yAxes: [{ticks: {min: -10, max:110}}],
+							},
+							
+						}
+						});
+						// sleep(2000);
+						setTimeout(get_data_to_visualize, 1000);
+					}
+						
+						
+				},
+				error: function(error){
+					// console.log(error)
+					console.log("Error")
+					console.log(error)
+				}
+				});
+	}
 
   </script>
 </body>
