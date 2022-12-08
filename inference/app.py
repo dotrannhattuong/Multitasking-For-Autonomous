@@ -17,18 +17,16 @@ model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx')
 #instatiate flask app  
 app = Flask(__name__, template_folder='./templates')
 
-# camera = cv2.VideoCapture(0)
-
 def gen_frames():  # generate frame by frame from camera
     if show: 
-        while True:
+        while camera.isOpened():
             success, frame = camera.read() 
             if success:
                 if(predict):                
-                    frame= model(frame)
-                
+                    frame = model(frame)
+
                 try:
-                    ret, buffer = cv2.imencode('.jpg', cv2.flip(frame,1))
+                    ret, buffer = cv2.imencode('.jpg', frame)
                     frame = buffer.tobytes()
                     yield (b'--frame\r\n'
                         b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
@@ -42,7 +40,6 @@ def gen_frames():  # generate frame by frame from camera
 @app.route('/')
 def index():
     return render_template('index.html', data = {'switch': switch})
-    
     
 @app.route('/video_feed')
 def video_feed():
@@ -75,30 +72,29 @@ def predict_client():
 
 @app.route('/requests',methods=['POST','GET'])
 def tasks():
-    global switch,camera, show
+    global switch, camera, show
     if request.method == 'POST':
         if  request.form.get('predict') in ['Predict', 'Predicting...']:
             
             global predict
             if show:
-                predict=not predict 
+                predict = not predict
+
             if(predict):
-                time.sleep(.02)   
+                time.sleep(4) 
+  
         if  request.form.get('status') in ['Start', 'Stop']:
             if request.form.get('status') == "Start":
-                print("Start")
                 show = True
                 switch=True
                 camera = cv2.VideoCapture(0)
+            
             else:
-
                 show=False
                 switch=False
                 predict = False
                 camera.release()
-                cv2.destroyAllWindows()
-                print("Close camera")
-                          
+                cv2.destroyAllWindows()                          
                  
     elif request.method=='GET':
         return render_template('index.html', data = {'switch': switch})
@@ -109,7 +105,7 @@ def tasks():
     return render_template('index.html', data = data)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5002)
+    app.run(host="0.0.0.0", port=5000)
     
 camera.release()
-cv2.destroyAllWindows()     
+cv2.destroyAllWindows()

@@ -9,6 +9,11 @@ from postproc import get_clusters, fast_clustering
 
 from profiler import Profiler
 
+logging.basicConfig(format='%(asctime)s [%(levelname)8s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+Profiler.set_warmup(25)
+
 cls_col = [(153, 255, 102), (255, 255, 255), (0, 255, 255), (52, 255, 52), (51, 153, 51),
            (0, 255, 0), (153, 51, 51), (0, 0, 255), (255, 0, 0)]
 
@@ -24,16 +29,21 @@ class Multitasking:
 
         self.model = CerberusInference(model_file)
 
+        self.__times = []
+
     def __call__(self, frame, infer_only=False):
-        frame = cv2.resize(frame, (640, 360))
-        frame = frame[20:340, :, :]
+
+        with Profiler('acquire'):
+            frame = cv2.resize(frame, (640, 360))
+            frame = frame[20:340, :, :]
 
         try:
+            # t = time()
+
             with Profiler('inference_all'):
                 preds = self.model(frame, raw=infer_only)
 
             if not infer_only:
-
                 det_out, lane_out, scn_out = preds
                 boxes = det_out
                 lanes, lanes_cls, lanes_votes = lane_out
@@ -42,7 +52,7 @@ class Multitasking:
                 w_cls = self.__wtr[scn_out[0].item()]
                 s_cls = self.__scn[scn_out[1].item()]
                 td_cls = self.__td[scn_out[2].item()]
-
+                
                 # Lane clustering
                 with Profiler('lane_clustering'):
                     lane_clusters = fast_clustering(lanes, lanes_cls, lanes_votes)
@@ -97,14 +107,22 @@ class Multitasking:
                                         (255,255,255), 1, cv2.LINE_AA, False)
 
                 # cv2.imshow("result", frame)
+            
+            # =================Timing Stats================= #
+            # dt = time() - t
+            # self.__times.append(dt)
+
+            # print(f"{'AVERAGE TIME:':<37}{np.array(self.__times[10:]).mean()*1000:>6.3f} ms")
+            # print(f"{'AVERAGE FPS:':<37}{(1/np.array(self.__times[10:]).mean()):>6.3f} FPS")
+            
         except:
             print('error')
             pass
-
+        
         return frame
 
-
 if __name__ == '__main__':
+    # this won't be run when imported
     detections = Multitasking('weights/mobilenetv2_bifpn_sim.onnx')
 
     frame = cv2.imread('./docs/test.png')
