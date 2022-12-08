@@ -21,7 +21,7 @@ lancol = [(0, 255, 255), (255, 255, 255), (255, 150, 50), (0, 0, 255),
           (102, 0, 102), (10, 255, 0), (255, 255, 0), (0, 153, 255)]
 
 class Multitasking:
-    def __init__(self, model_file):
+    def __init__(self, model_file, split_frames=1):
         # Classes
         self.__wtr = {v: k for k, v in WTR_CLS.items()}
         self.__scn = {v: k for k, v in SN_CLS.items()}
@@ -29,17 +29,17 @@ class Multitasking:
 
         self.model = CerberusInference(model_file)
 
+        # Hyperparameters
+        self.__frame_id = 0
+        self.__split_frames = split_frames
         self.__times = []
 
-    def __call__(self, frame, infer_only=False):
-
+    def predict(self, frame, infer_only=False):
         with Profiler('acquire'):
             frame = cv2.resize(frame, (640, 360))
             frame = frame[20:340, :, :]
 
         try:
-            # t = time()
-
             with Profiler('inference_all'):
                 preds = self.model(frame, raw=infer_only)
 
@@ -107,18 +107,31 @@ class Multitasking:
                                         (255,255,255), 1, cv2.LINE_AA, False)
 
                 # cv2.imshow("result", frame)
-            
-            # =================Timing Stats================= #
-            # dt = time() - t
-            # self.__times.append(dt)
 
-            # print(f"{'AVERAGE TIME:':<37}{np.array(self.__times[10:]).mean()*1000:>6.3f} ms")
-            # print(f"{'AVERAGE FPS:':<37}{(1/np.array(self.__times[10:]).mean()):>6.3f} FPS")
-            
         except:
             print('error')
             pass
-        
+
+        return frame
+
+    def __call__(self, frame):
+        t = time()
+
+        if self.__frame_id % self.__split_frames == 0:
+            frame = self.predict(frame)
+            self.__pre_frame = frame
+        else:
+            frame = self.__pre_frame
+
+        self.__frame_id += 1
+
+        # =================Timing Stats================= #
+        dt = time() - t
+        self.__times.append(dt)
+
+        print(f"{'AVERAGE TIME:':<37}{np.array(self.__times[10:]).mean()*1000:>6.3f} ms")
+        print(f"{'AVERAGE FPS:':<37}{(1/np.array(self.__times[10:]).mean()):>6.3f} FPS")
+
         return frame
 
 if __name__ == '__main__':
