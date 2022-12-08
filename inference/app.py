@@ -27,24 +27,12 @@ def gen_frames():  # generate frame by frame from camera
             if success:
                 if predict:
                     frame = model(frame)
-                    # if frame_id % 2 == 0:    
-                    #     frame = model(frame)
-                    #     pre_frame = frame
-                    # else:
-                    #     frame = pre_frame
-
-                    # frame_id += 1
 
                 try:
                     ret, buffer = cv2.imencode('.jpg', frame)
                     frame = buffer.tobytes()
                     yield (b'--frame\r\n'
                         b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-                    
-                    # lst_fps.append(1/(time.time()-t))
-                    # print(1/(time.time()-t))
-                    # print(f"Average FPS: {np.mean(lst_fps[10:])}")
-
                 except Exception as e:
                     pass
                     
@@ -85,7 +73,7 @@ def predict_client():
 
 @app.route('/requests',methods=['POST','GET'])
 def tasks():
-    global switch, camera, show, frame_id
+    global switch, camera, show
     if request.method == 'POST':
         if  request.form.get('predict') in ['Predict', 'Predicting...']:
             
@@ -95,7 +83,6 @@ def tasks():
 
             if(predict):
                 time.sleep(1) 
-                frame_id = 0
   
         if  request.form.get('status') in ['Start', 'Stop']:
             if request.form.get('status') == "Start":
