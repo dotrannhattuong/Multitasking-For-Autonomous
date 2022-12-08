@@ -9,8 +9,6 @@ from detection import Multitasking
 predict=False
 switch=False
 show=False
-frame_id = 0
-lst_fps = []
 
 # Load model
 model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx', split_frames=2)     
@@ -19,8 +17,6 @@ model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx', split_frames=2)
 app = Flask(__name__, template_folder='./templates')
 
 def gen_frames():  # generate frame by frame from camera
-    global frame_id, pre_frame
-
     if show: 
         while True:
             success, frame = camera.read()    
@@ -70,18 +66,16 @@ def predict_client():
                 'imageBase64': "1",
             })
 
-
 @app.route('/requests',methods=['POST','GET'])
 def tasks():
     global switch, camera, show
     if request.method == 'POST':
         if  request.form.get('predict') in ['Predict', 'Predicting...']:
-            
             global predict
             if show:
                 predict = not predict
 
-            if(predict):
+            if predict:
                 time.sleep(1) 
   
         if  request.form.get('status') in ['Start', 'Stop']:
