@@ -16,3 +16,5 @@ onnxruntime
 torchinfo
 path
 flask
+matplotlib
+pyserial

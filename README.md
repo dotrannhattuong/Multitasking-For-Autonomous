@@ -126,6 +126,12 @@ python main.py --exp_name=<name_of_conf_file>
 Please notice that the `.json` extension is NOT part of the experiment name: 
 ```i.e, conf file is "experiments/resnet34_bifpn.json" --> --exp_name=resnet34_bifpn```
 
+## <div align="center">LIDAR</div>
+Permission
+```
+ls /dev/ttyUSB0
+sudo chmod a+rw /dev/ttyUSB0
+```
 
 ## <div align="center">References</div>
 https://github.com/phongkhanh/multitask_car
