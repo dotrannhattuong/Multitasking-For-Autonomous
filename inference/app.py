@@ -1,10 +1,12 @@
 import base64
 from flask import Flask, render_template, Response, request, jsonify
 import cv2
-import datetime, time
-import os, sys
+import time
 import numpy as np
 from detection import Multitasking
+from lidar import Lidar
+
+distance_meter = Lidar()
 
 predict=False
 switch=False
@@ -36,12 +38,9 @@ def gen_frames():  # generate frame by frame from camera
                 pass
 
 def gen_random():
-    length = np.random.randint(10, 20)
+    x, y = distance_meter()
 
-    a = np.random.randint(0, 100, size=(length))
-    b = np.random.randint(0, 100, size=(length))
-
-    return [{"x": int(x), "y":int(y)} for x, y in zip(a, b)]
+    return [{"x": int(a), "y":int(b)} for a, b in zip(x, y)]
 
 @app.route('/')
 def index():
