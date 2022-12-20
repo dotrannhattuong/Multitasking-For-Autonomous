@@ -2,6 +2,7 @@ import serial
 import matplotlib.pyplot as plt
 import math
 import numpy as np
+import time
 
 class Lidar:
     def __init__(self):
@@ -10,6 +11,7 @@ class Lidar:
         self.ser = serial.Serial(board, baud, timeout=0.05)
     
     def __call__(self):
+        start_time = time.time()
         #### Send Data ####
         msg = b"sRN LMDscandata"
         msg = b"\x02" + msg + b"\x03"
@@ -32,11 +34,11 @@ class Lidar:
         distance_of_odjects = [int('0x' + object, 16) for object in distance_of_odjects]
 
         #### Get Min-Max Distance ####
-        Min_Distance = min(distance_of_odjects)
-        Max_Distance = max(distance_of_odjects)
+        # Min_Distance = min(distance_of_odjects)
+        # Max_Distance = max(distance_of_odjects)
 
-        print(f"Min_Distance: {Min_Distance}")
-        print(f"Max_Distance: {Max_Distance}")
+        # print(f"Min_Distance: {Min_Distance}")
+        # print(f"Max_Distance: {Max_Distance}")
 
         #### Get Dictionary Angle:Distance ####
         list_angle = [angle * 3.14 / 180 for angle in np.arange(start_angle, start_angle + number_of_object/2, 0.5)]

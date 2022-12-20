@@ -193,7 +193,7 @@
 						  my_chart.destroy();
 					  }
 					  if(is_visualize){
-						  console.log(res.data)
+						//   console.log(res.data)
 						  my_chart = new Chart("myChart", {
 						  type: "scatter",
 						  data: {
@@ -205,15 +205,18 @@
 						  },
 						  options: {
 							  legend: {display: false},
+							//   Scale x, y axis
 							  scales: {
-							  xAxes: [{ticks: {min: -10, max:110}}],
-							  yAxes: [{ticks: {min: -10, max:110}}],
+							  xAxes: [{ticks: {min: -3000, max:3000}}],
+							  yAxes: [{ticks: {min: 0, max:5000}}],
 							  },
+							  animation: {duration: 0},
 							  
 						  }
 						  });
-						  // sleep(2000);
-						  setTimeout(get_data_to_visualize, 1000);
+						  // Set timeout to run next (ms)
+						  setTimeout(get_data_to_visualize, 0000);
+
 					  }
 						  
 						  
