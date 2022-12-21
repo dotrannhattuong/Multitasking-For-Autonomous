@@ -4,8 +4,8 @@
 - [x] Model
 - [x] Setup Board
 - [ ] API
-- [ ] Sensor
-- [ ] Hardware Controller 
+- [x] LIDAR
+- [ ] CAN BUS
 ---
 
 ## <div align="center">Model</div>
