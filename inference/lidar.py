@@ -6,9 +6,10 @@ import time
 
 class Lidar:
     def __init__(self):
-        board = '/dev/ttyUSB0'
-        baud = 115200
-        self.ser = serial.Serial(board, baud, timeout=0.05)
+        # board = '/dev/ttyUSB0'
+        board = 'COM8'
+        baud = 500000
+        self.ser = serial.Serial(board, baud, timeout=0.01)
     
     def __call__(self):
         start_time = time.time()
@@ -49,6 +50,8 @@ class Lidar:
 
         # angle_distance = dict(zip(list_angle, distance_of_odjects))
         # print(angle_distance)
+
+        print(f"FPS: {1/(time.time() - start_time)}")
 
         return x, y
 
