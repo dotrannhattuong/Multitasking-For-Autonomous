@@ -13,7 +13,7 @@ switch=False
 show=False
 
 # Load model
-model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx', split_frames=4)     
+model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx', split_frames=1)     
 
 #instatiate flask app  
 app = Flask(__name__, template_folder='./templates')
