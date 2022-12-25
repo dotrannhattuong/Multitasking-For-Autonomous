@@ -12,7 +12,7 @@
 
 - visualize_same_lidar(Dòng 292): Vẽ biểu đồ same lidar. 
 
--get_data_to_visualize_lidar(Dòng 299): Xử lý sự kiện gọi API đến server để lấy dữ liệu show chart Lidar. Thay đổi range X ở dòng 323. Thay đổi title của chart ở dòng 339, thay đổi x_label ở dòng 327.
+- get_data_to_visualize_lidar(Dòng 299): Xử lý sự kiện gọi API đến server để lấy dữ liệu show chart Lidar. Thay đổi range X ở dòng 323. Thay đổi title của chart ở dòng 339, thay đổi x_label ở dòng 327.
 
 - get_data_to_visualize_same_lidar(Dòng 357): Xử lý sự kiện gọi API đến server để lấy dữ liệu show chart Same Lidar. Thay đổi range X ở dòng 383. Thay đổi title của chart ở dòng 398, thay đổi x_label ở dòng 386.
 
