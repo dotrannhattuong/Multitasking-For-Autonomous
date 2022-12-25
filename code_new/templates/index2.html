@@ -96,8 +96,8 @@
             </p>
             <p class="default"><b>- Vehicle</b></p>
         	<ul class="default" style="padding-left: 20px;">
-                <li>Charge <p id="Vehicle_Charge" class="default detail"> </p></li>
-                <li>Gear<p id="Vehicle_Gear" class="default detail"> </p></li>
+                <li>Charge <p id="Vehicle_Charge" class="default detail">. </p></li>
+                <li>Gear<p id="Vehicle_Gear" class="default detail">. </p></li>
                 <li>Odermeter<p id="Vehicle_Odermeter" class="default detail"> Km</p></li>
                 <li>Speed<p id="Vehicle_Speed" class="default detail"> Km/h</p></li>
             </ul>
@@ -105,7 +105,7 @@
             <br>
             <p class="default"><b>- Motor</b></p>
         	<ul class="default" style="padding-left: 20px;">
-                <li>Status<p id="Motor_Status" class="default detail"> </p></li>
+                <li>Status<p id="Motor_Status" class="default detail">. </p></li>
                 <li>Temperature<p id="Motor_Temperature" class="default detail"> &#176;C</p></li>
                 <li>Speed<p id="Motor_Speed" class="default detail"> RPM</p></li>
                 <li>Required current<p id="Motor_Required" class="default detail"> A</p></li>
@@ -114,7 +114,7 @@
             <br>
             <p class="default"><b>- Battery</b></p>
         	<ul class="default" style="padding-left: 20px;">
-                <li>Status<p id="Battery_Status" class="default detail"> </p></li>
+                <li>Status<p id="Battery_Status" class="default detail">. </p></li>
                 <li>SOC<p id="Battery_SOC" class="default detail"> %</p></li>
                 <li>Temperature<p id="Battery_Temperature" class="default detail"> &#176;C</p></li>
                 <li>Voltage<p id="Battery_Voltage" class="default detail"> V</p></li>
@@ -213,7 +213,7 @@
 				let stream;
 				if(window.outerWidth < window.outerHeight){
 					stream = await navigator.mediaDevices.getUserMedia(
-                        { video: {facingModThay đổi title của chart ở dòng, thay đổi x_label ở dònge: {exact: "environment",}
+                        { video: {facingMode: {exact: "environment",}
 					}});
 				}else{
 					stream = await navigator.mediaDevices.getUserMedia(
