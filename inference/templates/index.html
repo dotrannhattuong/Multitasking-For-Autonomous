@@ -1,234 +1,533 @@
-<!-- <header>
-    <meta charset="utf-8">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <title>DEMO WEB</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+}
+.leftThing {
+  width: 26%;
+  height: 100%;
+  border-style: solid;
+  border-radius: 5px;
+  padding:10px
+}
+.rightThing {
+  margin-left:2px;
+  width: 80%;
+  height: 100%;
+}
+.rightContent {
+  height: 33%;
+  border-style: solid;
+  border-radius: 5px;
+  padding:10px;
+  margin-bottom:5px;
+}
+.hidden {
+    display: none;
+}
+.show {
+    display: block;
+}
+.chart {
+    max-width:500px;
+    max-height: 500px;
+    background: lightgray;
+    margin: 20px auto;
+}
+.default {
+    margin: 0px;
+    font-size:15px
+}
+.logo {
+    width: 200px;
+    height: 200px;
+    padding-top: 50px;
+    padding-bottom: 30px;
+}
+.margin{
+    margin: 67px 15px 0 0;
+}
+.margin_left_5{
+    margin-left: 5px;
+}
+.custom_btn {
+    color: #fff;
+    border-radius: 5px;
+    font-family: 'Lato', sans-serif;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: inline-block;
+    box-shadow:inset 2px 2px 2px 0px rgba(255,255,255,.5),
+    7px 7px 20px 0px rgba(0,0,0,.1),
+    4px 4px 5px 0px rgba(0,0,0,.1);
+    outline: none;
+    background-color: #89d8d3;
+    background-image: linear-gradient(315deg, #89d8d3 0%, #03c8a8 74%);
+    border: none;
+    z-index: 1;
+    width: 90px;
+    height: 40px;
+}
+.custom_btn:hover {
+    background-image: linear-gradient(315deg, #89d8d3 0%, #024338 74%);
+}
 
-</header> -->
-<body onload="on_load();">
-	<div class="container">
-	  <div class="row">
-		<div class="col-lg-8 offset-lg-2">
-		  <h2 class="mt-5">MULTITASKING FOR AUTONOMOUS</h2>
-		  <!-- <form method="post" action="{{ url_for('tasks') }}"> -->
-			<form method="post" action="/requests" >
-			<input type="submit" value="Start" name="status" id="status"/>
-			<input type="submit" value="Predict" name="predict" id="predict" />
-			<input type="file"  id="get_file" />
-			
-			<input type="button" value="Start Client" name="start_client"  id="start_client" onclick="show_webcam_client()" />
-			<input type="button" value="Predict Client" name="predict_client"  id="predict_client" onclick="predict_webcam_client()" />
-			<input type="button" value="Start Visualize" name="start_visualize"  id="start_visualize" onclick="visualize()" />
-		  </form>
-		  <img src="{{ url_for('video_feed') }}"  height="400px" />
-		  <video id="video" width="700px" height="400px" autoplay controls ></video>
-		  <canvas id="canvas" width="700px" height="400px" style="display: none;"></canvas>
-		  <image src="" width="700px" height="400px" id = "photo" style="display: none;"/>
-		  <canvas id="myChart"  style="width:500px;max-width:500px;display: none;background: lightgray;"></canvas>
-		</div>
-	  </div>
-	</div>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-	<script>
-	  var data = '{{ data|tojson }}';
-	  data = data.replace(/\s/g, '');
-	  data = data.replace(/\\/g, '/');
-	  data = JSON.parse(data);
-  
-	  var localstream;
-	  var is_predict_client = false;
-	  var is_visualize = false;
-	  
-  
-	  function on_load(){
-		  document.getElementById("video").style.display = "none"
-		  console.log(data)
-  
-		  if(data["switch"] == true){
-			  document.getElementById("status").setAttribute("value","Stop")
-		  }else{
-			  document.getElementById("status").setAttribute("value","Start")
-		  }
-  
-		  if(data["predict"] == 1){
-			  document.getElementById("predict").setAttribute("value","Predicting...")
-		  }else{
-			  document.getElementById("predict").setAttribute("value","Predict")
-		  }
-	  }
-  
-	  document.getElementById("get_file").onchange = function(event) {
-		  let video = document.getElementById("video");
-		  let file = event.target.files[0];
-		  let blobURL = URL.createObjectURL(file);
-		  video.style.display='inline';
-		  video.src = blobURL;
-	  }
-  
-	  async function show_webcam_client(){
-			  let video = document.getElementById('video');
-			  let btn_start_client = document.getElementById("start_client");
-			  let v = btn_start_client.getAttribute("value");
-			  let canvas = document.getElementById("canvas");
-  
-			  document.getElementById("photo").style.display="none";
-  
-			  if(v == "Start Client"){
-				  let stream;
-				  if(window.outerWidth < window.outerHeight){
-					  stream = await navigator.mediaDevices.getUserMedia({ video: {
-																				  facingMode: {
-																					  exact: "environment",
-																				  }
-					  }});
-				  }else{
-					  stream = await navigator.mediaDevices.getUserMedia({ video: {
-																			  facingMode: "user"
-																		  }});
-				  }
-				  video.srcObject = stream;
-				  localstream = stream;
-				  video.setAttribute("style", "display:inline");
-				  btn_start_client.setAttribute("value","Stop Client")
-			  }else{
-				  is_predict_client = false
-				  localstream.getTracks()[0].stop();
-				  video.pause();
-				  video.src = "";
-				  btn_start_client.setAttribute("value","Start Client");
-				  video.setAttribute("style", "display:none");
-				  document.getElementById("predict_client").setAttribute("value", "Predict Client")
-  
-			  }
-		  }
-  
-	  function predict_webcam_client(){
-		  // /////////////
-		  if(document.getElementById("start_client").getAttribute("value") != "Start Client" || document.getElementById("video").src.length != 0){
-			  let predict_client = document.getElementById("predict_client")
-			  if (predict_client.getAttribute("value") == "Predict Client"){
-				  predict_client.setAttribute("value","Predicting client...")
-				  is_predict_client = true
-				  send_image()
-			  }else{
-				  is_predict_client = false
-				  predict_client.setAttribute("value","Predict Client")
-			  }
-		  }
-		  
-	  }
-  
-	  function send_image(){
-		  let video = document.getElementById('video');
-		  let canvas = document.getElementById("canvas");
-		  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-		  let image_data_url = canvas.toDataURL('image/jpeg');
-		  image_data_url = image_data_url.replace("data:image/jpeg;base64,", "")
-		  image_data_url = image_data_url.replace("data:image/png;base64,", "")
-  
-		  var data = {
-			  'imageBase64': image_data_url,
-			  "predict": is_predict_client
-		  }
-  
-		  host_request = "/predict_client"
-		  $.ajax({
-				  url: host_request, 
-				  type: "POST",
-				  data: JSON.stringify(data),
-				  dataType: "json", 
-				  cache: false,
-				  contentType: 'application/json', 
-				  success: function(res){
-					  let photo = document.getElementById("photo");
-					  let imageBase64 = res.imageBase64;
-					  if(imageBase64 == "1"){
-						  photo.style.display = "none";
-					  }else{
-						  photo.src = "data:image/png;base64," + imageBase64;
-						  photo.style.display = "inline";
-						  photo.width = res.w;
-						  photo.height = res.h;
-						  send_image();
-					  }
-				  },
-				  error: function(error){
-					  // console.log(error)
-					  console.log("Error")
-				  }
-				  });
-	  }
-  
-	  
-	  var my_chart;
-	  function visualize(){
-		  let btn_visualize = document.getElementById("start_visualize");
-		  let value = btn_visualize.getAttribute("value");
-		  
-		  if(value == "Start Visualize"){
-			  is_visualize = true;
-			  document.getElementById("myChart").setAttribute("style", "width:500px;max-width:500px;display: inline;background: lightgray;");
-			  btn_visualize.setAttribute("value", "Stop Visualize");
-			  get_data_to_visualize();
-		  }else{
-			  is_visualize = false;
-			  document.getElementById("myChart").setAttribute("style", "display: none");
-			  btn_visualize.setAttribute("value", "Start Visualize");
-			  
-		  }
-		  
-		  
-	  }
-  
-	  function get_data_to_visualize(){
-		  $.ajax({
-				  url: "/visualize", 
-				  type: "POST",
-				  dataType: "json", 
-				  cache: false,
-				  success: function(res){
-					  if(my_chart){
-						  my_chart.destroy();
-					  }
-					  if(is_visualize){
-						//   console.log(res.data)
-						  my_chart = new Chart("myChart", {
-						  type: "scatter",
-						  data: {
-							  datasets: [{
-							  pointRadius: 4,
-							  pointBackgroundColor: "rgb(0,0,255)",
-							  data: res.data,
-							  }]
-						  },
-						  options: {
-							  legend: {display: false},
-							//   Scale x, y axis
-							  scales: {
-							  xAxes: [{ticks: {min: -3000, max:3000}}],
-							  yAxes: [{ticks: {min: 0, max:3000}}],
-							  },
-							  animation: {duration: 0},
-							  
-						  }
-						  });
-						  // Set timeout to run next (ms)
-						  setTimeout(get_data_to_visualize, 0000);
+.center{
+    margin: 0 auto;
+}
 
-					  }
-						  
-						  
-				  },
-				  error: function(error){
-					  // console.log(error)
-					  console.log("Error")
-					  console.log(error)
-				  }
-				  });
-	  }
-  
-	</script>
-  </body>
-  
+.detail{
+    display: flex;
+    margin-left: 150px;
+    margin-top: -17px;
+}
+</style>
+</head>
+<body onload="load()">
+<div class='container'>
+      	<div class="leftThing">
+            <p class="default" style="text-align: center;font-size: 20px;"> 
+                <b>Vehicle</b> 
+            </p>
+            <p class="default"><b>- Vehicle</b></p>
+        	<ul class="default" style="padding-left: 20px;">
+                <li>Chart <p id="Vehicle_Chart" class="default detail"></p></li>
+                <li>Gear<p id="Vehicle_Gear" class="default detail"></p></li>
+                <li>Odermeter<p id="Vehicle_Odermeter" class="default detail"></p></li>
+                <li>Speed<p id="Vehicle_Speed" class="default detail"></p></li>
+            </ul>
+            
+            <br>
+            <p class="default"><b>- Motor</b></p>
+        	<ul class="default" style="padding-left: 20px;">
+                <li>Status<p id="Motor_Status" class="default detail"></p></li>
+                <li>Temperature<p id="Motor_Temperature" class="default detail"></p></li>
+                <li>Speed<p id="Motor_Speed" class="default detail"></p></li>
+                <li>Required current<p id="Motor_Required" class="default detail"></p></li>
+            </ul>
+            
+            <br>
+            <p class="default"><b>- Battery</b></p>
+        	<ul class="default" style="padding-left: 20px;">
+                <li>Status<p id="Battery_Status" class="default detail"></p></li>
+                <li>SOC<p id="Battery_SOC" class="default detail"></p></li>
+                <li>Temperature<p id="Battery_Temperature" class="default detail"></p></li>
+                <li>Voltage<p id="Battery_Voltage" class="default detail"></p></li>
+            </ul>
+            <img class="logo show center" src="{{ url_for('get_logo') }}"/>
+
+            <div class="container margin">
+                <input class="margin_left_5 custom_btn" type="button" onclick="get_webcam_server();" value="Start" name="status" id="btn_webcam_server"/>
+                <input class="margin_left_5 custom_btn" type="button" value="Start Client" onclick="get_webcam_client();" id="btn_webcam_client"/>
+                <input class="margin_left_5 custom_btn" type="button" value="File" onclick="get_file_video();" id="btn_get_file"/>
+                <input type="file" class="hidden" id="video_file" onclick="this.value=null;"/>
+                <input class="margin_left_5 custom_btn" type="button" value="Predict" id="predict" onclick="predict();"/>
+            </div>
+            
+        </div>
+	<div class="rightThing">
+     	<div class="rightContent">
+            <p id="title" class="show default" style="text-align: center;font-size: 20px;">MULTITASKING FOR AUTOMONOUS</p>
+        	<img class="hidden center" src="" height="370px" id="img_server" />
+            <video class="hidden center" id="video" width="600px" height="370px" onended="end_video();" autoplay controls multiple></video>
+            <canvas class="hidden center" id="canvas" width="600px" height="370px"></canvas>
+            <image class="hidden center" src="" id = "photo" />
+      	</div>
+        <div class="rightContent">
+            <div class="container">
+                <canvas id="lidar" class="chart hidden"></canvas>
+                <canvas id="same_lidar" class="chart hidden"></canvas>
+
+            </div>
+      	</div>
+        
+     </div>
+    </div>
+
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+<script>
+
+    var data = '{{ data|tojson }}';
+	data = data.replace(/\s/g, '');
+	data = data.replace(/\\/g, '/');
+	data = JSON.parse(data);
+
+    var is_webcam_server = false;
+    var is_webcam_client = false;
+    var is_file_client = false;
+
+
+    var is_predict_client = false;
+
+    var localstream;
+
+    function get_webcam_server(){
+        let img_server = document.getElementById("img_server");
+        
+        $.ajax({
+            url: "/get_webcam", 
+            type: "POST",
+            dataType: "json", 
+            cache: false,
+            success: function(res){
+                if(res.show_webcam){
+                    changeClass(img_server, "hidden","show");
+
+                    img_server.setAttribute("src","{{ url_for('video_feed') }}");
+                    document.getElementById("btn_webcam_server").setAttribute("value","Stop");
+                    title.innerHTML = "WEBCAM SERVER";
+                    is_webcam_server = true;
+                }else{
+                    changeClass(img_server, "show","hidden");
+                    img_server.setAttribute("src","");
+                    document.getElementById("btn_webcam_server").setAttribute("value","Start");
+                    document.getElementById("predict").setAttribute("value","Predict");
+                    is_webcam_server = false;
+                }
+            },
+            error: function(error){
+                // console.log(error)
+                console.log("Error")
+                console.log(error)
+            }
+        });
+    }
+
+    async function get_webcam_client(){
+			let video = document.getElementById('video');
+			let btn_webcam_client = document.getElementById("btn_webcam_client");
+			let v = btn_webcam_client.getAttribute("value");
+			let canvas = document.getElementById("canvas");
+
+            is_webcam_client = !is_webcam_client;
+            
+			if(is_webcam_client){
+				let stream;
+				if(window.outerWidth < window.outerHeight){
+					stream = await navigator.mediaDevices.getUserMedia(
+                        { video: {facingMode: {exact: "environment",}
+					}});
+				}else{
+					stream = await navigator.mediaDevices.getUserMedia(
+                        { video: {facingMode: "user"}});
+				}
+				video.srcObject = stream;
+				localstream = stream;
+                changeClass(video, "hidden", "show");
+				btn_webcam_client.setAttribute("value","Stop Client")
+                title.innerHTML="WEBCAM CLIENT"
+			}else{
+                localstream.getTracks()[0].stop();
+				video.pause();
+				video.src = "";
+				btn_webcam_client.setAttribute("value","Start Client");
+                is_predict_client = false;
+				document.getElementById("predict").setAttribute("value","Predict")
+                console.log("close");
+                changeClass(video, "show", "hidden");
+			}
+		}
+
+    function predict(){
+        let btn_predict = document.getElementById("predict");
+        if(is_webcam_server){
+            $.ajax({
+                url: "/predict_server", 
+                type: "POST",
+                dataType: "json", 
+                cache: false,
+                success: function(res){
+                if(res.predict){
+                    btn_predict.setAttribute("value","Predicting\n Server")
+                }else{
+                    btn_predict.setAttribute("value","Predict")
+                }
+            },
+            error: function(error){
+                // console.log(error)
+                console.log("Error")
+                console.log(error)
+            }
+            });
+        }else if(is_webcam_client || is_file_client){
+            is_predict_client = !is_predict_client;
+            if (is_predict_client){
+                btn_predict.setAttribute("value","Predicting\n Client");
+                send_image();
+            }else{
+                btn_predict.setAttribute("value","Predict");
+            }
+        }
+    }
+
+    function changeClass(component, remove_class, target_class){
+        component.classList.remove(remove_class);
+        component.classList.add(target_class);
+    }
+
+    function load(){
+        visualize_lidar();
+        visualize_same_lidar();
+        show_details();
+    }
+
+    var chart_lidar;
+    var chart_same_lidar;
+    var is_visualize_lidar = true;
+    var is_visualize_same_lidar = true;
+
+	function visualize_lidar(){
+        let chart = document.getElementById("lidar");
+        chart.classList.remove("hidden");
+        chart.classList.add("show");
+        get_data_to_visualize_lidar();
+    }   
+
+	function visualize_same_lidar(){
+        let chart = document.getElementById("same_lidar");
+        chart.classList.remove("hidden");
+        chart.classList.add("show");
+        get_data_to_visualize_same_lidar();
+    }   
+
+    function get_data_to_visualize_lidar(){
+		$.ajax({
+            url: "/visualize_lidar", 
+            type: "POST",
+            dataType: "json", 
+            cache: false,
+            success: function(res){
+                if(chart_lidar){
+                    chart_lidar.destroy();
+                }
+                if(is_visualize_lidar){
+                    // console.log(res.data)
+                    chart_lidar = new Chart("lidar", {
+                    type: "scatter",
+                    data: {
+                        datasets: [{
+                        pointRadius: 4,
+                        pointBackgroundColor: "rgb(0,0,255)",
+                        data: res.data,
+                        }]
+                    },
+                    options: {
+                        legend: {display: false},
+                        scales: {
+                        xAxes: [
+                            {ticks: {min: -10, max:110},
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'X Title'
+                            }}
+                        ],
+                        yAxes: [{ticks: {min: -10, max:110},
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Y Title'
+                                }}],
+                        },
+                        animation: {duration: 0},
+                        title: {
+                                display: true,
+                                text: 'LIDAR'
+                            },  
+                        }
+                    });
+                    // sleep(2000);
+                    setTimeout(get_data_to_visualize_lidar, 1000);
+                }
+                    
+                    
+            },
+            error: function(error){
+                // console.log(error)
+                console.log("Error")
+                console.log(error)
+            }
+        });
+    }
+
+    function get_data_to_visualize_same_lidar(){
+		$.ajax({
+            url: "/visualize_same_lidar", 
+            type: "POST",
+            dataType: "json", 
+            cache: false,
+            success: function(res){
+                if(chart_same_lidar){
+                    chart_same_lidar.destroy();
+                }
+                if(is_visualize_same_lidar){
+                    // console.log(res.data)
+                    chart_same_lidar = new Chart("same_lidar", {
+                    type: "line",
+                    data: {
+                        labels: res.x_label,
+                        datasets: [{
+                        borderColor: "green",
+                        fill: false,
+                        data: res.data,
+                        }]
+                    },
+                    options: {
+                        legend: {display: false},
+                        scales: {
+                        xAxes: [
+                            {ticks: {min: -10, max:110},
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'X Title'
+                            }}
+                        ],
+                        yAxes: [{ticks: {min: -10, max:110},
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Y Title'
+                                }}],
+                        },
+                        animation: {duration: 0},
+                        title: {
+                                display: true,
+                                text: 'SAME LIDAR',
+                            },  
+                        }
+                    });
+                    // sleep(2000);
+                    setTimeout(get_data_to_visualize_same_lidar, 1000);
+                }
+                    
+                    
+            },
+            error: function(error){
+                // console.log(error)
+                console.log("Error - Same")
+                console.log(error)
+            }
+        });
+    }
+
+    function get_file_video(){
+        let btn_get_file = document.getElementById("btn_get_file");
+        is_file_client = !is_file_client;
+        console.log(is_file_client);
+        if(is_file_client){
+            let input_file = document.getElementById("video_file");
+            input_file.click();
+            btn_get_file.setAttribute("value", "Stop\nFile");
+        }else{
+            end_video();
+        }
+    }
+    
+    $('input[type="file"]').change(function(e){
+        let video = document.getElementById("video");
+
+		let file = e.target.files[0];
+        let fileName = file.name;
+        
+        console.log(fileName);
+		let blobURL = URL.createObjectURL(file);
+        console.log(fileName);
+        changeClass(video, "hidden","show");
+        
+		video.src = blobURL;
+        title.innerHTML = "FILE: "+ fileName;
+    });
+
+    function end_video(){
+        let video = document.getElementById("video");
+        let btn_get_file = document.getElementById("btn_get_file");
+
+        video.pause();
+        video.src = "";
+        btn_get_file.setAttribute("value", "File");
+        is_file_client = false;
+        is_predict_client= false;
+        document.getElementById("predict").setAttribute("value","Predict")
+        console.log("close");
+        changeClass(video, "show", "hidden");
+    }
+
+    function send_image(){
+		let video = document.getElementById('video');
+        
+		let canvas = document.getElementById("canvas");
+		canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+		let image_data_url = canvas.toDataURL('image/jpeg');
+		image_data_url = image_data_url.replace("data:image/jpeg;base64,", "")
+		image_data_url = image_data_url.replace("data:image/png;base64,", "")
+
+		var data = {
+			'imageBase64': image_data_url,
+			"predict": is_predict_client
+		}
+
+		host_request = "/predict_client"
+		$.ajax({
+            url: host_request, 
+            type: "POST",
+            data: JSON.stringify(data),
+            dataType: "json", 
+            cache: false,
+            contentType: 'application/json', 
+            success: function(res){
+                let photo = document.getElementById("photo");
+                let imageBase64 = res.imageBase64;
+                if(imageBase64 == ""){
+                    changeClass(photo, "show","hidden")
+                    if(is_webcam_client || is_file_client){
+                        changeClass(video, "hidden", "show");
+                    }
+                }else{
+                    console.log("ok predict");
+                    photo.src = "data:image/png;base64," + imageBase64;
+                    changeClass(photo, "hidden","show")
+                    changeClass(video, "show", "hidden");
+                    photo.width = res.w;
+                    photo.height = res.h;
+                    send_image();
+                }
+            },
+            error: function(error){
+                console.log("Error")
+            }
+            });
+	}
+
+    function show_details(){
+        $.ajax({
+            url: "/get_details", 
+            type: "POST",
+            dataType: "json", 
+            cache: false,
+            contentType: 'application/json', 
+            success: function(res){
+                for(let i in res){
+                    for(let j in res[i]){
+                        let component = document.getElementById(i+"_"+j);
+                        component.innerHTML = res[i][j];
+                    }
+                }
+                setTimeout(show_details, 1000);
+            },
+            error: function(error){
+                console.log("Error")
+            }
+            });
+    }
+</script>
+</body>
+</html>
+
+
