@@ -5,13 +5,22 @@ import numpy as np
 import time
 
 class Lidar:
-    def __init__(self):
-        # board = '/dev/ttyUSB0'
-        board = 'COM8'
-        baud = 500000
-        self.ser = serial.Serial(board, baud, timeout=0.01)
+    def __init__(self, testing):
+        self.__testing = testing
+
+        if self.__testing == True:
+            pass
+
+        else:
+            # board = '/dev/ttyUSB0'
+            board = 'COM8'
+            baud = 500000
+            self.ser = serial.Serial(board, baud, timeout=0.01)
     
     def __call__(self):
+        if self.__testing == True:
+            return [0], [0]
+            
         start_time = time.time()
         #### Send Data ####
         msg = b"sRN LMDscandata"

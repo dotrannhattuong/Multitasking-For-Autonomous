@@ -6,7 +6,7 @@ import numpy as np
 from detection import Multitasking
 from lidar import Lidar
 
-distance_meter = Lidar()
+distance_meter = Lidar(testing=True)
 
 predict=False
 switch=False
@@ -121,7 +121,7 @@ def get_details():
     details = {
         "Vehicle":{
             "Charge": "OFF",
-            "Gear": "N",
+            "Gear": gen(0, 100),
             "Odermeter": gen(0, 100),
             "Speed": gen(0, 100)
         },
@@ -143,9 +143,9 @@ def get_details():
 @app.route('/get_logo')
 def get_logo():
     if battery_status:
-        frame = cv2.imread("inference\images\charging.png")
+        frame = cv2.imread("inference/images/charging.png")
     else:
-        frame = cv2.imread("inference\images\Twizy.png")
+        frame = cv2.imread("inference/images/Twizy.png")
 
     ret, buffer = cv2.imencode('.jpg', frame)
     frame = buffer.tobytes()
