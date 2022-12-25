@@ -120,13 +120,13 @@ def get_details():
     gen = np.random.randint
     details = {
         "Vehicle":{
-            "Charge": gen(0, 100),
-            "Gear": gen(0, 100),
+            "Charge": "OFF",
+            "Gear": "N",
             "Odermeter": gen(0, 100),
             "Speed": gen(0, 100)
         },
         "Motor":{
-            "Status": gen(0, 100),
+            "Status": "OFF",
             "Temperature": gen(0, 100),
             "Speed": gen(0, 100),
             "Required": gen(0, 100), #Required current
