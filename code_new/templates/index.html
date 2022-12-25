@@ -22,7 +22,7 @@
 		  <input type="button" value="Start Visualize" name="start_visualize"  id="start_visualize" onclick="visualize()" />
         </form>
         <img src="{{ url_for('video_feed') }}"  height="400px" />
-        <video id="video" width="700px" height="400px" autoplay controls ></video>
+        <video id="video" autoplay controls ></video>
 		<canvas id="canvas" width="700px" height="400px" style="display: none;"></canvas>
 		<image src="" width="700px" height="400px" id = "photo" style="display: none;"/>
 		<canvas id="myChart"  style="width:500px;max-width:500px;display: none;background: lightgray;"></canvas>
@@ -78,12 +78,24 @@
 			if(v == "Start Client"){
 				let stream;
 				if(window.outerWidth < window.outerHeight){
+					document.getElementById("video").style.width = 900
+					document.getElementById("video").style.height = 1200
+					document.getElementById("canvas").style.width = 700
+					document.getElementById("canvas").style.height = 400
+					// document.getElementById("photo").style.width = 800
+					// document.getElementById("photo").style.height = 1000
 					stream = await navigator.mediaDevices.getUserMedia({ video: {
 																				facingMode: {
 																					exact: "environment",
 																				}
 					}});
 				}else{
+					document.getElementById("video").style.width = 700
+					document.getElementById("video").style.height = 400
+					document.getElementById("canvas").style.width = 700
+					document.getElementById("canvas").style.height = 480
+					// document.getElementById("photo").style.width = 700
+					// document.getElementById("photo").style.height = 400
 					stream = await navigator.mediaDevices.getUserMedia({ video: {
 																			facingMode: "user"
 																		}});

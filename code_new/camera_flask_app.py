@@ -8,7 +8,8 @@ import numpy as np
 
 predict=False
 switch=False
-show=False
+show_webcam=False
+battery_status = False
 
 
 #Load pretrained face detection model    
@@ -17,7 +18,7 @@ net = cv2.dnn.readNetFromCaffe('./saved_model/deploy.prototxt.txt', './saved_mod
 #instatiate flask app  
 app = Flask(__name__, template_folder='./templates')
 
-
+camera = None
 
 def detect_face(frame):
     global net
@@ -38,15 +39,12 @@ def detect_face(frame):
  
 
 def gen_frames():  # generate frame by frame from camera
-    if show: 
+    if show_webcam: 
         while True:
             success, frame = camera.read() 
             if success:
                 if(predict):                
                     frame= detect_face(frame)
-                
-
-                
                 try:
                     ret, buffer = cv2.imencode('.jpg', cv2.flip(frame,1))
                     frame = buffer.tobytes()
@@ -54,7 +52,6 @@ def gen_frames():  # generate frame by frame from camera
                         b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
                 except Exception as e:
                     pass
-                    
             else:
                 pass
 
@@ -67,21 +64,39 @@ def gen_random():
 
     return [{"x": int(x), "y":int(y)} for x, y in zip(a, b)]
 
+def gen_random2():
+    length = np.random.randint(10, 20)
+
+    a = np.random.randint(0, 100, size=(length))
+
+    return {"data":a.tolist(), "x_label":list(range(length))}
+
 @app.route('/')
 def index():
-    return render_template('index.html', data = {'switch': switch})
+    return render_template('index2.html', data = {'switch': switch})
     
     
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route("/visualize", methods = ['POST'])
-def visualize():
-    
+@app.route("/visualize_lidar", methods = ['POST'])
+def visualize_lidar():
     return jsonify({
         'data': gen_random()
     })
+
+@app.route("/visualize_same_lidar", methods = ['POST'])
+def visualize_same_lidar():
+    return jsonify(
+        gen_random2()
+    )
+@app.route('/predict_server',methods=['POST','GET'])
+def predict_server():
+    global predict
+    if show_webcam:
+        predict = not predict
+    return jsonify({"predict": predict})
 
 @app.route('/predict_client', methods = ["POST"])
 def predict_client():
@@ -104,50 +119,67 @@ def predict_client():
             })
         else:
             return jsonify({
-                'imageBase64': "1",
+                'imageBase64': "",
             })
 
-    # except Exception as e:
-    #     print(e)
-    #     return Response({
-    #         'imageBase64': '',
-    #     }, status=400, content_type="application/json")
+@app.route('/get_webcam',methods=['POST'])
+def get_webcam():
+    global switch, camera, show_webcam, predict
+    if not show_webcam:
+        camera = cv2.VideoCapture(0)
+    else:
+        camera.release()
+        cv2.destroyAllWindows()
+        predict = False
 
-@app.route('/requests',methods=['POST','GET'])
-def tasks():
-    global switch, camera, show
-    if request.method == 'POST':
-        if  request.form.get('predict') in ['Predict', 'Predicting...']:
-            
-            global predict
-            if show:
-                predict=not predict 
-            if predict:
-                time.sleep(.02)   
-        if  request.form.get('status') in ['Start', 'Stop']:
-            if request.form.get('status') == "Start":
-                show = True
-                switch=True
-                camera = cv2.VideoCapture(0)
-            else:
-                show=False
-                switch=False
-                predict = False
-                camera.release()
-                cv2.destroyAllWindows()
-            
-                 
-    elif request.method=='GET':
-        return render_template('index.html', data = {'switch': switch})
-    data = {
-        'switch': switch,
-        'predict': predict
+        
+    show_webcam = not show_webcam
+    return jsonify({"show_webcam": show_webcam})
+
+@app.route('/get_details', methods = ["POST"])
+def get_details():
+    gen = np.random.randint
+    details = {
+        "Vehicle":{
+            "Chart": gen(0, 100),
+            "Gear": gen(0, 100),
+            "Odermeter": gen(0, 100),
+            "Speed": gen(0, 100)
+        },
+        "Motor":{
+            "Status": gen(0, 100),
+            "Temperature": gen(0, 100),
+            "Speed": gen(0, 100),
+            "Required": gen(0, 100), #Required current
+        },
+        "Battery":{
+            "Status": "ON" if battery_status else "OFF",
+            "SOC": gen(0, 100),
+            "Temperature": gen(0, 100),
+            "Voltage": gen(0, 100)
+        }
     }
-    return render_template('index.html', data = data)
+    return jsonify(details)
 
+
+
+@app.route('/get_logo')
+def get_logo():
+    if battery_status:
+        frame = cv2.imread("..\inference\images\charging.png")
+    else:
+        frame = cv2.imread("..\inference\images\Twizy.png")
+
+    print(frame.shape)
+    ret, buffer = cv2.imencode('.png', frame)
+    frame = buffer.tobytes()
+    res =  (b'--frame\r\n'
+        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    return Response(res, mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002)
-    
-camera.release()
-cv2.destroyAllWindows()     
+
+if camera is not None: 
+    camera.release()
+    cv2.destroyAllWindows()     
