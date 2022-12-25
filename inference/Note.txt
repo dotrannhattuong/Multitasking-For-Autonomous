@@ -1,0 +1,28 @@
+- get_webcam_server(Dòng 173): Xử lý sự kiện lấy webcam từ phía server
+
+- get_webcam_client(Dòng 204):Xủ lý sự kiện lấy webcam của client
+
+- predict(Dòng 237): Xử lý 3 sự kiện predict cho 1.Server 2.Client 3.Video từ client
+
+- ChangeClass(Dòng 269): Xử lý hidden hoặc show class
+
+- load(Dòng 274): Hàm sẽ show các detail và hiện 2 chart khi web vừa chạy
+
+- visualize_lidar(Dòng 285): Vẽ biểu đồ Lidar
+
+- visualize_same_lidar(Dòng 292): Vẽ biểu đồ same lidar. 
+
+-get_data_to_visualize_lidar(Dòng 299): Xử lý sự kiện gọi API đến server để lấy dữ liệu show chart Lidar. Thay đổi range X ở dòng 323. Thay đổi title của chart ở dòng 339, thay đổi x_label ở dòng 327.
+
+- get_data_to_visualize_same_lidar(Dòng 357): Xử lý sự kiện gọi API đến server để lấy dữ liệu show chart Same Lidar. Thay đổi range X ở dòng 383. Thay đổi title của chart ở dòng 398, thay đổi x_label ở dòng 386.
+
+- get_file_video(Dòng 416): Xử lý sự kiện khi nhấn nút File (Mở Video).
+
+- change(Dòng 428): SHow video khi user chọn xong video.
+
+- end_video(Dòng 442): Xử lý sự kiện khi video kết thúc (Xoá video)
+
+- send_image(Dòng 456): Xử lý sự kiện gọi API đến server để predict ảnh trên video hoặc webcam của client khi user nhấn nút Predict
+
+- show_details(Dòng 502): Xử lý sự kiện gọi API đến server đẻ lấy các thông tin của vehicle, motor hoặc battery.
+  

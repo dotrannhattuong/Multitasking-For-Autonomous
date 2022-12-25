@@ -11,8 +11,7 @@
     <div class="row">
       <div class="col-lg-8 offset-lg-2">
         <h2 class="mt-5">Demo Project</h2>
-        <!-- <form method="post" action="{{ url_for('tasks') }}"> -->
-		  <form method="post" action="/requests" >
+		  <form method="post" action="" >
           <input type="submit" value="Start" name="status" id="status"/>
           <input type="submit" value="Predict" name="predict" id="predict" />
           <input type="file"  id="get_file" />
@@ -21,7 +20,7 @@
           <input type="button" value="Predict Client" name="predict_client"  id="predict_client" onclick="predict_webcam_client()" />
 		  <input type="button" value="Start Visualize" name="start_visualize"  id="start_visualize" onclick="visualize()" />
         </form>
-        <img src="{{ url_for('video_feed') }}"  height="400px" />
+        <img src=""  height="400px" />
         <video id="video" autoplay controls ></video>
 		<canvas id="canvas" width="700px" height="400px" style="display: none;"></canvas>
 		<image src="" width="700px" height="400px" id = "photo" style="display: none;"/>
