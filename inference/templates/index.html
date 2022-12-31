@@ -43,7 +43,7 @@
     font-size:15px
 }
 .logo {
-    width: 320px;
+    /* width: 320px; */
     height: 230px;
     padding-top: 30px;
 }
@@ -119,7 +119,7 @@
                 <li>Temperature<p id="Battery_Temperature" class="default detail"> &#176;C</p></li>
                 <li>Voltage<p id="Battery_Voltage" class="default detail"> V</p></li>
             </ul>
-            <img class="logo show center" src="{{ url_for('get_logo') }}"/>
+            <img class="logo show center" src="{{ url_for('get_logo') }}" id="logo"/>
 
             <div class="container margin">
                 <input class="margin_left_5 custom_btn" type="button" onclick="get_webcam_server();" value="Start" name="status" id="btn_webcam_server"/>
@@ -517,6 +517,19 @@
                         let value = component.innerHTML;
                         let split_value = value.split(" ")
                         component.innerHTML = res[i][j] + " "+split_value[1];
+
+                        if(i == "Battery" && j == "Status"){
+                            if(value.trim() != res[i][j]){
+                                console.log("VO " + value +" " + res[i][j])
+                                let logo = document.getElementById("logo")
+                                logo.setAttribute("src","{{ url_for('get_logo') }}"); 
+                            }
+                            // else{
+                                // logo.setAttribute("src",""); 
+
+                            // }
+
+                        }
                     }
                 }
                 setTimeout(show_details, 1000);

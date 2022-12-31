@@ -116,8 +116,12 @@ def get_webcam():
 
 @app.route('/get_details', methods = ["POST"])
 def get_details():
+    global battery_status
     gen = np.random.randint
     data = canbus()
+
+    battery_status = False if data[6] in ["OFF","ERROR"] else True
+    # battery_status = True if gen(0, 1000) % 2 ==0 else False
 
     details = {
         "Vehicle":{
@@ -134,6 +138,7 @@ def get_details():
         },
         "Battery":{
             "Status": data[6], # "ON" if battery_status else "OFF",
+            # "Status": f"{battery_status}", # "ON" if battery_status else "OFF",
             "SOC": data[7],
             "Temperature": data[9], 
             "Voltage": data[5] 
@@ -141,18 +146,32 @@ def get_details():
     }
     return jsonify(details)
 
+def gen_logo():
+    while True:
+        if battery_status:
+            frame = cv2.imread("inference/images/charging2.png")
+        else:
+            frame = cv2.imread("inference/images/Twizy.png")
+
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
 @app.route('/get_logo')
 def get_logo():
-    if battery_status:
-        frame = cv2.imread("inference/images/charging.png")
-    else:
-        frame = cv2.imread("inference/images/Twizy.png")
+    # print("GET LOGO", battery_status)
+    # if battery_status:
+    #     frame = cv2.imread("inference/images/charging.png")
+    # else:
+    #     frame = cv2.imread("inference/images/Twizy.png")
 
-    ret, buffer = cv2.imencode('.jpg', frame)
-    frame = buffer.tobytes()
-    res =  (b'--frame\r\n'
-        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-    return Response(res, mimetype='multipart/x-mixed-replace; boundary=frame')
+    # ret, buffer = cv2.imencode('.jpg', frame)
+    # frame = buffer.tobytes()
+    # res =  (b'--frame\r\n'
+    #     b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    # return Response(res, mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(gen_logo(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 if __name__ == '__main__':

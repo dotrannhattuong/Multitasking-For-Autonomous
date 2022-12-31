@@ -85,6 +85,7 @@ chmod +x deps.sh
 ```
 Fix Bug: Illegal instruction(core dumped) error on Jetson Nano
 ```
+nano ~/.bashrc
 export OPENBLAS_CORETYPE=ARMV8
 ```
 The installation process require a very long time, at the end reboot is required. When done inference can be performed using TensorRT as described above.
