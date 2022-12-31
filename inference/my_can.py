@@ -7,7 +7,8 @@ class CAN:
         self.__testing = False
 
         try:
-            board = 'COM7'
+            board = '/dev/ttyUSB0'
+            # board = 'COM7'
             baud_rate = 115200
             self.arduino = serial.Serial(board, baud_rate, timeout=10)
         except:
@@ -24,7 +25,7 @@ class CAN:
         self.__name_charging = ['ERROR', 'INIT', 'READY', 'OFF']
 
         ############ DEBUGING ############
-        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'ERROR', 0, 10, 50, 'NULL', 0]
+        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 10, 50, 'NULL', 0]
 
     def __call__(self):
         if self.__testing == True:

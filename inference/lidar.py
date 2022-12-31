@@ -8,7 +8,7 @@ class Lidar:
     def __init__(self):
         self.__testing = False
         try:
-            board = '/dev/ttyUSB0'
+            board = '/dev/ttyUSB1'
             # board = 'COM8'
             baud = 500000
             self.ser = serial.Serial(board, baud, timeout=0.01)
