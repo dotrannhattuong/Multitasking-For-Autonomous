@@ -107,7 +107,7 @@
         	<ul class="default" style="padding-left: 20px;">
                 <li>Status<p id="Motor_Status" class="default detail">. </p></li>
                 <li>Temperature<p id="Motor_Temperature" class="default detail"> &#176;C</p></li>
-                <li>Speed<p id="Motor_Speed" class="default detail"> RPM</p></li>
+                <li>RPM<p id="Motor_Speed" class="default detail"> RPM</p></li>
                 <li>Required current<p id="Motor_Required" class="default detail"> A</p></li>
             </ul>
             
@@ -141,7 +141,7 @@
         <div class="rightContent">
             <div class="container">
                 <canvas id="lidar" class="chart hidden"></canvas>
-                <canvas id="same_lidar" class="chart hidden"></canvas>
+                <canvas id="speed" class="chart hidden"></canvas>
 
             </div>
       	</div>
@@ -273,14 +273,14 @@
 
     function load(){
         visualize_lidar();
-        visualize_same_lidar();
+        visualize_speed();
         show_details();
     }
 
     var chart_lidar;
-    var chart_same_lidar;
+    var chart_speed;
     var is_visualize_lidar = true;
-    var is_visualize_same_lidar = true;
+    var is_visualize_speed = true;
 
 	function visualize_lidar(){
         let chart = document.getElementById("lidar");
@@ -289,11 +289,11 @@
         get_data_to_visualize_lidar();
     }   
 
-	function visualize_same_lidar(){
-        let chart = document.getElementById("same_lidar");
+	function visualize_speed(){
+        let chart = document.getElementById("speed");
         chart.classList.remove("hidden");
         chart.classList.add("show");
-        get_data_to_visualize_same_lidar();
+        get_data_to_visualize_speed();
     }   
 
     function get_data_to_visualize_lidar(){
@@ -324,19 +324,19 @@
                             {ticks: {min: -3000, max:3000},
                             scaleLabel: {
                                 display: true,
-                                labelString: 'X Title'
+                                labelString: 'Horizontal axis '
                             }}
                         ],
                         yAxes: [{ticks: {min: 0, max:3000},
                                 scaleLabel: {
                                     display: true,
-                                    labelString: 'Y Title'
+                                    labelString: 'Vertical axis'
                                 }}],
                         },
                         animation: {duration: 0},
                         title: {
                                 display: true,
-                                text: 'LIDAR'
+                                text: '                LIDAR'
                             },  
                         }
                     });
@@ -354,19 +354,19 @@
         });
     }
 
-    function get_data_to_visualize_same_lidar(){
+    function get_data_to_visualize_speed(){
 		$.ajax({
-            url: "/visualize_same_lidar", 
+            url: "/visualize_speed", 
             type: "POST",
             dataType: "json", 
             cache: false,
             success: function(res){
-                if(chart_same_lidar){
-                    chart_same_lidar.destroy();
+                if(chart_speed){
+                    chart_speed.destroy();
                 }
-                if(is_visualize_same_lidar){
+                if(is_visualize_speed){
                     // console.log(res.data)
-                    chart_same_lidar = new Chart("same_lidar", {
+                    chart_speed = new Chart("speed", {
                     type: "line",
                     data: {
                         labels: res.x_label,
@@ -383,24 +383,24 @@
                             {ticks: {min: -10, max:110},
                             scaleLabel: {
                                 display: true,
-                                labelString: 'X Title'
+                                labelString: 'Time (s)'
                             }}
                         ],
-                        yAxes: [{ticks: {min: -10, max:110},
+                        yAxes: [{ticks: {min: 0, max:60},
                                 scaleLabel: {
                                     display: true,
-                                    labelString: 'Y Title'
+                                    labelString: 'Speed (km/h)'
                                 }}],
                         },
                         animation: {duration: 0},
                         title: {
                                 display: true,
-                                text: 'SAME LIDAR',
+                                text: '  SPEED',
                             },  
                         }
                     });
                     // sleep(2000);
-                    setTimeout(get_data_to_visualize_same_lidar, 1000);
+                    setTimeout(get_data_to_visualize_speed, 1000);
                 }
                     
                     

@@ -5,8 +5,11 @@ import time
 import numpy as np
 from detection import Multitasking
 from lidar import Lidar
+from my_can import CAN
 
-distance_meter = Lidar(testing=True)
+#### Embedded System ####
+distance_meter = Lidar()
+canbus = CAN()
 
 predict=False
 switch=False
@@ -17,7 +20,7 @@ camera = None
 # Load model
 model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx', split_frames=1)     
 
-#instatiate flask app  
+# instatiate flask app  
 app = Flask(__name__, template_folder='./templates')
 
 def gen_frames():  # generate frame by frame from camera
@@ -39,17 +42,13 @@ def gen_frames():  # generate frame by frame from camera
             else:
                 pass
 
-def gen_random():
+def lidar_visualize():
     x, y = distance_meter()
-
     return [{"x": int(a), "y":int(b)} for a, b in zip(x, y)]
 
-def gen_random2():
-    length = np.random.randint(10, 20)
-
-    a = np.random.randint(0, 100, size=(length))
-
-    return {"data":a.tolist(), "x_label":list(range(length))}
+def speed_visualize():
+    spd, real_time = canbus.visualize_speed()
+    return {"data":spd.tolist(), "x_label":real_time.tolist()} # list(range(length))
 
 @app.route('/')
 def index():
@@ -62,13 +61,13 @@ def video_feed():
 @app.route("/visualize_lidar", methods = ['POST'])
 def visualize_lidar():
     return jsonify({
-        'data': gen_random()
+        'data': lidar_visualize()
     })
 
-@app.route("/visualize_same_lidar", methods = ['POST'])
-def visualize_same_lidar():
+@app.route("/visualize_speed", methods = ['POST'])
+def visualize_speed():
     return jsonify(
-        gen_random2()
+        speed_visualize()
     )
 
 @app.route('/predict_server',methods=['POST','GET'])
@@ -118,24 +117,26 @@ def get_webcam():
 @app.route('/get_details', methods = ["POST"])
 def get_details():
     gen = np.random.randint
+    data = canbus()
+
     details = {
         "Vehicle":{
-            "Charge": "OFF",
-            "Gear": gen(0, 100),
-            "Odermeter": gen(0, 100),
-            "Speed": gen(0, 100)
+            "Charge": data[6],
+            "Gear": data[4],
+            "Odermeter": data[2],
+            "Speed": data[1]
         },
         "Motor":{
-            "Status": "OFF",
-            "Temperature": gen(0, 100),
-            "Speed": gen(0, 100),
-            "Required": gen(0, 100), #Required current
+            "Status": "OFF", ### Chưa tìm ra
+            "Temperature": data[3],
+            "Speed": data[0],
+            "Required": data[3], ### Chưa tìm ra
         },
         "Battery":{
-            "Status": "ON" if battery_status else "OFF",
-            "SOC": gen(0, 100),
-            "Temperature": gen(0, 100),
-            "Voltage": gen(0, 100)
+            "Status": data[6], # "ON" if battery_status else "OFF",
+            "SOC": data[7],
+            "Temperature": data[9], 
+            "Voltage": data[5] 
         }
     }
     return jsonify(details)
