@@ -78,12 +78,24 @@ python inference/run_tensorrt.py -m weights/mobilenetv2_bifpn_sim.onnx -v videos
 We provide a script to automatically install all the requirements on an Nvidia board, it is only tested on Jetson AGX Xavier
 and Jetson Nano on a fresh install of `JetPack 4.6.1`
 
+**Step 1**: [Configure your NVIDIA Jetson Nano](https://pyimagesearch.com/2020/03/25/how-to-configure-your-nvidia-jetson-nano-for-computer-vision-and-deep-learning/).
+
+**Step 2**: 
+
+`Setup Board`
 ```
+sudo apt-get install python3-pip
+
 cd docs
 chmod +x deps.sh
 ./deps.sh
+
+# Requirements
+pip3 install path matplotlib flask pyserial
+pip3 install -U scipy
 ```
-Fix Bug: Illegal instruction(core dumped) error on Jetson Nano
+
+`Fix Bug`: Illegal instruction(core dumped) error on Jetson Nano
 ```
 nano ~/.bashrc
 export OPENBLAS_CORETYPE=ARMV8
