@@ -7,7 +7,7 @@ class CAN:
         self.__testing = False
 
         try:
-            board = '/dev/ttyUSB0'
+            board = '/dev/ttyACM0'
             # board = 'COM7'
             baud_rate = 115200
             self.arduino = serial.Serial(board, baud_rate, timeout=10)
