@@ -6,7 +6,7 @@
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 
-int send_data[12] = {0, 10, 33, 50, 1, 24, 3, 0, 10, 50, 0, 0}; // RPM, SPD, Odometer, Motor Temperator, GEAR, Total Voltage, CHARGING, SOC, Temp_bat_min, Tem_bat_Max, Power, Throttle Possition
+int send_data[12] = {0, 0, 33, 50, 1, 24, 3, 0, 10, 50, 0, 0}; // RPM, SPD, Odometer, Motor Temperator, GEAR, Total Voltage, CHARGING, SOC, Temp_bat_min, Tem_bat_Max, Power, Throttle Possition
 // RPM, SPD(km/h): 415
 // Motor Temperator (oC): 406
 // GEAR(D,N,R), power(NULL, DELIVERY, RECUP), Throttle Possition (%), Total Voltage (V): 1435
