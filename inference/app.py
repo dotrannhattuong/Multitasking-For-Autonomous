@@ -110,6 +110,7 @@ def get_webcam():
         
     else:
         camera.release()
+        camera = None
         cv2.destroyAllWindows()
         predict = False
 
