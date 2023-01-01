@@ -105,6 +105,9 @@ def get_webcam():
     global switch, camera, show_webcam, predict
     if not show_webcam:
         camera = cv2.VideoCapture(0)
+        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+        
     else:
         camera.release()
         cv2.destroyAllWindows()
