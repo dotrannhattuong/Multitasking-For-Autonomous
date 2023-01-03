@@ -97,25 +97,21 @@ void loop()
           case 415: // 0x19F
           {
             uint16_t value19F = buf[2]<<4 | buf[3] >>4;
-            int16_t Rpm = (value19F - 2000)*10;
-            float Spd = ((Rpm)/float(7250))*float(80);
-            SERIAL_PORT_MONITOR.print("value: "); //seRpm, " RPM");
-            SERIAL_PORT_MONITOR.println(value19F);
-            SERIAL_PORT_MONITOR.print("Speed of Motor: "); //seRpm, " RPM");
-            SERIAL_PORT_MONITOR.print(Rpm);
-            SERIAL_PORT_MONITOR.println(" Rpm");
-            SERIAL_PORT_MONITOR.print("Speed of Vehicle: "); //,Spd," Km/h");
-            SERIAL_PORT_MONITOR.print(abs(Spd));
-            SERIAL_PORT_MONITOR.println(" Km/h");
+            int32_t Rpm = (value19F - 2000)*10;                               // int32_t = int: in ra một số tự nhiên
+            float Spd = (abs(Rpm)/float(7250))*float(80);
+            SERIAL_PORT_MONITOR.print("value: "); SERIAL_PORT_MONITOR.println(value19F);
+            
+            SERIAL_PORT_MONITOR.print("Speed of Motor: ");  SERIAL_PORT_MONITOR.print(Rpm);  SERIAL_PORT_MONITOR.println(" Rpm");
+            
+            SERIAL_PORT_MONITOR.print("Speed of Vehicle: ");  SERIAL_PORT_MONITOR.print(Spd); SERIAL_PORT_MONITOR.println(" Km/h");
+           
             //--------------------------------------------
             break;
           }
           case 406: //0x196
           {
             uint16_t Temp = buf[5] -40;
-            SERIAL_PORT_MONITOR.print("Motor Temperator: "); 
-            SERIAL_PORT_MONITOR.print(Temp);
-            SERIAL_PORT_MONITOR.println(" (C)");
+            SERIAL_PORT_MONITOR.print("Motor Temperator: ");  SERIAL_PORT_MONITOR.print(Temp);   SERIAL_PORT_MONITOR.println(" (C)");
             //----------------------------------------------
             break;
           }
@@ -131,21 +127,21 @@ void loop()
               case 8:   { SERIAL_PORT_MONITOR.println("R"); break; }  //0x08
             }
             ///////////////power/////////////////////////
-            uint8_t power = buf[2];
+            uint32_t power = buf[2];
             SERIAL_PORT_MONITOR.print ("Power Status: ");
             if (88<=power<=163)
             {
-              if (power = 100) {SERIAL_PORT_MONITOR.println("NULL");}
+              if (power == 100) {SERIAL_PORT_MONITOR.println("NULL");}
               else if ( power > 100) {SERIAL_PORT_MONITOR.println("DELIVERY");}
               else if ( power < 100) {SERIAL_PORT_MONITOR.println("RECUP");}
             }
             /////////////TPS//////////////////
             uint8_t tps = buf[3];
-            uint8_t p_tps;
+            float p_tps;
             SERIAL_PORT_MONITOR.print("Throttle Possition: ");
             if (0 <= tps <= 253) // 0x00 <= tps <= 0xFD
             {
-              p_tps = (tps/253) * 100;    
+              p_tps = abs(tps)/float(253) * float(100);    
               SERIAL_PORT_MONITOR.print(p_tps); SERIAL_PORT_MONITOR.println(" %");       
             }
             else {  SERIAL_PORT_MONITOR.println(" CAN GET TPS");}
@@ -153,7 +149,7 @@ void loop()
             //
             //////////////TOTAL VOLTAGE///////////
             uint8_t c_volt = buf[5];
-            uint8_t volt;
+            int volt;
             if ( 0 <= c_volt <= 48 ) 
             { 
               volt  = c_volt /2; 
@@ -161,16 +157,17 @@ void loop()
               SERIAL_PORT_MONITOR.print(volt); 
               SERIAL_PORT_MONITOR.println(" V");           
             }
-            else { SERIAL_PORT_MONITOR.println("Total Voltage: CHECK ERROR "); }
+            else { SERIAL_PORT_MONITOR.println("Total Voltage: CHECK ERROR "); }  
             //------------------------------------------------------------
             break;
         }
         case 1060: // 0x424
         {
           ////////////CHARGING///////////
-          uint8_t ck_c = buf[0];
-          switch (ck_c);
+          uint32_t ck_c = buf[0];
           SERIAL_PORT_MONITOR.print("Checking Charging Battery: ");
+          switch (ck_c)
+          {         
           case 9: // 0x9
           {   SERIAL_PORT_MONITOR.println(" ERROR"); break;  }
           case 0: // 0x0
@@ -179,31 +176,51 @@ void loop()
           {   SERIAL_PORT_MONITOR.println(" READY"); break;  }
           case 18: // 0x12
           {   SERIAL_PORT_MONITOR.println(" STOP");  break;  }
+          }
           //////////////POWER OF CHARGE (RECUP & DRIVE/////////////
           uint8_t inc, outc;
           uint16_t recup , drive;
           inc = buf[2]; outc = buf[3];
           recup = inc * 500;
           drive = outc * 500; 
-          if (0 <= recup <= 3000)
+          if (0 <= recup <= 30000)
           {
             SERIAL_PORT_MONITOR.print("Max Recup: ");SERIAL_PORT_MONITOR.println(recup);
             
           } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERROR "); }
-          if ( 0 <= drive <= 3000)
+          if ( 0 <= drive <= 30000)
           {
             SERIAL_PORT_MONITOR.print("Drive: ");SERIAL_PORT_MONITOR.println(drive);
           } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERRO "); }
           //////////////// TEMP BAT + SOC /////////
-          uint8_t tpbmi = buf [4], tpbmx = buf [7], soc_bat = buf[6];
-          uint8_t temp_bat_min,temp_bat_max  ;
-          temp_bat_min= tpbmi - 40;
+          int8_t tpbmi = buf [4], tpbmx = buf [7];
+          int32_t temp_bat_min,temp_bat_max, soh_bat = buf[6]  ;
+          temp_bat_min= tpbmi - 40; 
           temp_bat_max= tpbmx - 40;
-          SERIAL_PORT_MONITOR.print("Battery State Of Charge: "    );SERIAL_PORT_MONITOR.println(soc_bat     );
-          SERIAL_PORT_MONITOR.print("Battery Temp Min: "           );SERIAL_PORT_MONITOR.println(temp_bat_min);
-          SERIAL_PORT_MONITOR.print("Battery Temp Max: "           );SERIAL_PORT_MONITOR.println(temp_bat_max);
+          SERIAL_PORT_MONITOR.print("Battery State Of Health: "    );SERIAL_PORT_MONITOR.print(soh_bat     );SERIAL_PORT_MONITOR.println(" %")  ;
+          SERIAL_PORT_MONITOR.print("Battery Temp Min: "           );SERIAL_PORT_MONITOR.print(temp_bat_min);SERIAL_PORT_MONITOR.println(" (C)");
+          SERIAL_PORT_MONITOR.print("Battery Temp Max: "           );SERIAL_PORT_MONITOR.print(temp_bat_max);SERIAL_PORT_MONITOR.println(" (C)");
           //-----------------------------------------------------------
           break;
+      }
+      case(341) // 0x155
+      {
+        //////////////////////buf0////charging/////////
+        int32_t val_charge = buf[0];
+        int32_t poc, aoc;
+        if (0<=val_charge<=7)
+        {
+          poc = val_charge *300;
+          aoc= cla_charge * 5;
+          SERIAL_PORT_MONITOR.print("Power of charging: "       );SERIAL_PORT_MONITOR.print(poc     );SERIAL_PORT_MONITOR.println(" Wat")  ;
+          SERIAL_PORT_MONITOR.print("Current for charging: "    );SERIAL_PORT_MONITOR.print(aoc     );SERIAL_PORT_MONITOR.println(" A")    ;
+        }
+        int16_t bit_c = buf[1] & 15;
+        int16_t bit_t = buf[2];
+        int16_t val_pull = (bit_c << 8) | bit_t;
+        int16_t val_ampe = (val_pull - 2000) / 4;
+        
+        
       }
     }
   }     
