@@ -97,7 +97,7 @@ void loop()
           case 415: // 0x19F
           {
             uint16_t value19F = buf[2]<<4 | buf[3] >>4;
-            int32_t Rpm = (value19F - 2000)*10;                               // int32_t = int: in ra một số tự nhiên
+            int Rpm = (value19F - 2000)*10;                               // int32_t = int: in ra một số tự nhiên
             float Spd = (abs(Rpm)/float(7250))*float(80);
             SERIAL_PORT_MONITOR.print("value: "); SERIAL_PORT_MONITOR.println(value19F);
             
@@ -163,20 +163,20 @@ void loop()
         }
         case 1060: // 0x424
         {
-          ////////////CHARGING///////////
-          uint32_t ck_c = buf[0];
-          SERIAL_PORT_MONITOR.print("Checking Charging Battery: ");
-          switch (ck_c)
-          {         
-          case 9: // 0x9
-          {   SERIAL_PORT_MONITOR.println(" ERROR"); break;  }
-          case 0: // 0x0
-          {   SERIAL_PORT_MONITOR.println(" INIT");  break;  }
-          case 17: // 0x11
-          {   SERIAL_PORT_MONITOR.println(" READY"); break;  }
-          case 18: // 0x12
-          {   SERIAL_PORT_MONITOR.println(" STOP");  break;  }
-          }
+//          ////////////CHARGING///////////
+//          uint32_t ck_c = buf[0];
+//          SERIAL_PORT_MONITOR.print("Checking Charging Battery: ");
+//          switch (ck_c)
+//          {         
+//          case 9: // 0x9
+//          {   SERIAL_PORT_MONITOR.println(" ERROR"); break;  }
+//          case 0: // 0x0
+//          {   SERIAL_PORT_MONITOR.println(" INIT");  break;  }
+//          case 17: // 0x11
+//          {   SERIAL_PORT_MONITOR.println(" READY"); break;  }
+//          case 18: // 0x12
+//          {   SERIAL_PORT_MONITOR.println(" STOP");  break;  }
+//          }
           //////////////POWER OF CHARGE (RECUP & DRIVE/////////////
           uint8_t inc, outc;
           uint16_t recup , drive;
@@ -194,7 +194,7 @@ void loop()
           } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERRO "); }
           //////////////// TEMP BAT + SOC /////////
           int8_t tpbmi = buf [4], tpbmx = buf [7];
-          int32_t temp_bat_min,temp_bat_max, soh_bat = buf[6]  ;
+          int32_t temp_bat_min,temp_bat_max, soh_bat = buf[5]  ;
           temp_bat_min= tpbmi - 40; 
           temp_bat_max= tpbmx - 40;
           SERIAL_PORT_MONITOR.print("Battery State Of Health: "    );SERIAL_PORT_MONITOR.print(soh_bat     );SERIAL_PORT_MONITOR.println(" %")  ;
@@ -241,15 +241,32 @@ void loop()
           }
         }
         //////////////////////SOC////////////////////
-        int soc_5 = buf[4], soc_6 = buf[5];
-        float soc = ((soc_5 + soc_6) / float(400))*float(100);
+        uint16_t soc_5 = buf[4]<<8, soc_6 = buf[5];
+        float soc = abs((soc_5 | soc_6) / float(400));
         if (0<=soc<=100) {SERIAL_PORT_MONITOR.print("State Of Charging: ");SERIAL_PORT_MONITOR.print(soc);SERIAL_PORT_MONITOR.println(" %"); }
-        else {SERIAL_PORT_MONITOR.print("State Of Charging: ERROR");}
+        else {SERIAL_PORT_MONITOR.println("State Of Charging: ERROR");}
         ///////////////////////////////////////////////////////
         break;
        }
        case (1061): //0x425
        {
+        ////////////CHARGING///////////
+         uint32_t ck_c = buf[0];
+         SERIAL_PORT_MONITOR.print("Checking Charging Battery: ");
+         switch (ck_c)
+         {         
+         case 29: // 0x1A
+         {   SERIAL_PORT_MONITOR.println(" INIT"); break;  }
+         case 36: // 0x24
+         {   SERIAL_PORT_MONITOR.println(" READY");  break;  }
+         case 10: // 0x0A
+         {   SERIAL_PORT_MONITOR.println(" CHARGING"); break;  }
+         case 42: // 0x2A
+         {   SERIAL_PORT_MONITOR.println(" DRIVING");  break;  }
+         case 44: // 0x2C
+         {   SERIAL_PORT_MONITOR.println(" START TRICKLE CHARGING");  break;  }
+         }
+        
         ///////////////////////////////
         break;
        }
@@ -278,11 +295,14 @@ void loop()
        }
        case (1374): //0x55E
        {
+        uint16_t redis7 = buf[6], redis8 = buf[7];
+        
         ///////////////////////////////
         break;
        }
        case (1375): //0x55F
        {
+        
         ///////////////////////////////
         break;
        }
