@@ -41,8 +41,8 @@ void loop()
           case 415: // 0x19F
           {
             uint16_t value19F = buf[2]<<4 | buf[3] >>4;
-            int16_t Rpm = (value19F - 2000)*10;
-            float Spd = ((Rpm)/float(7250))*float(80);
+            int32_t Rpm = (value19F - 2000)*10;
+            float Spd = (abs(Rpm)/float(7250))*float(80);
 
             send_data[0] = Rpm;
             send_data[1] = Spd;
@@ -51,11 +51,13 @@ void loop()
           }
 
           /////////////////// Odometer ///////////////////
-          case 1369:
-          {
-            uint16_t Odometer = buf[3]/100;
-            send_data[2] = Odometer;
-
+          case 1433: //0x599
+          {            
+            int odo1 = buf[0], odo2 = buf[3];
+            int odo = odo1 + odo2;
+            
+            send_data[2] = odo;
+            ///////////////////////////////
             break;
           }
 
@@ -70,7 +72,7 @@ void loop()
          case 1435: //0x59B
          {
             /////////////////// GEAR ///////////////////
-            uint8_t gear = buf [0];
+            uint8_t gear = buf[0];
             
             switch (gear)
             {
@@ -80,7 +82,7 @@ void loop()
             }
             
             /////////////// POWER /////////////////////////
-            uint8_t power = buf[2];
+            uint32_t power = buf[2];
            
             if (88<=power<=163)
             {
@@ -89,12 +91,12 @@ void loop()
               else if ( power < 100) { send_data[10]=2; } // RECUP
             }
             
-            /////////////TPS//////////////////
+            ///////////// TPS //////////////////
             uint8_t tps = buf[3];
-            uint8_t p_tps;
+            float p_tps;
             if (0 <= tps <= 253) // 0x00 <= tps <= 0xFD
             {
-              p_tps = (tps/253) * 100;
+              p_tps = abs(tps)/float(253) * float(100);
               send_data[11]=p_tps; 
             }
             
@@ -115,46 +117,91 @@ void loop()
         
         case 1060: // 0x424
         {
-          ////////////CHARGING///////////
-          uint8_t ck_c = buf[0];
+          //////////// CHARGING ///////////
+          uint32_t ck_c = buf[0];
 
-          switch (ck_c);
+          switch (ck_c)
+          {
           case 9: // 0x9
           {  send_data[6]=0;  break; } // ERROR
           case 0: // 0x0
           {  send_data[6]=1;  break; } // INIT
           case 17: // 0x11
           {  send_data[6]=2;  break; } // READY
+          case 18: // 0x12
           {  send_data[6]=3;  break; } // STOP
-          
+          }
           //////////////POWER OF CHARGE (RECUP & DRIVE/////////////
 //          uint8_t inc, outc;
 //          uint16_t recup , drive;
 //          inc = buf[2]; outc = buf[3];
 //          recup = inc * 500;
 //          drive = outc * 500; 
-//          if (0 <= recup <= 3000)
+//          if (0 <= recup <= 30000)
 //          {
 //            SERIAL_PORT_MONITOR.print("Max Recup: ");SERIAL_PORT_MONITOR.println(recup);
 //            
 //          } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERROR "); }
-//          if ( 0 <= drive <= 3000)
+//          if ( 0 <= drive <= 30000)
 //          {
 //            SERIAL_PORT_MONITOR.print("Drive: ");SERIAL_PORT_MONITOR.println(drive);
 //          } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERRO "); }
 
           //////////////// TEMP BAT + SOC /////////
-          uint8_t tpbmi = buf [4], tpbmx = buf [7], soc_bat = buf[6];
-          uint8_t temp_bat_min,temp_bat_max  ;
+          int8_t tpbmi = buf[4], tpbmx = buf[7];
+          int32_t temp_bat_min, temp_bat_max, soh_bat = buf[6];
           temp_bat_min= tpbmi - 40;
           temp_bat_max= tpbmx - 40;
 
-          send_data[7]=soc_bat;
           send_data[8]=temp_bat_min;
           send_data[9]=temp_bat_max;
           //-----------------------------------------------------------
           break;
       }
+      case(341): // 0x155
+      {
+        //////////////////////buf0////charging/////////
+//        int32_t val_charge = buf[0];
+//        int32_t poc, aoc;
+//        if (0<=val_charge<=7)
+//        {
+//          poc = val_charge *300;
+//          aoc = val_charge * 5;
+//          SERIAL_PORT_MONITOR.print("Power of charging: "       );SERIAL_PORT_MONITOR.print(poc     );SERIAL_PORT_MONITOR.println(" Wat")  ;
+//          SERIAL_PORT_MONITOR.print("Current for charging: "    );SERIAL_PORT_MONITOR.print(aoc     );SERIAL_PORT_MONITOR.println(" A")    ;
+//        }
+//        /////////////////////////////battery current//////////////////////
+//        int16_t bit_c = buf[1] & 15;
+//        int16_t bit_t = buf[2];
+//        int16_t val_pull = (bit_c << 8) | bit_t;
+//        int16_t val_ampe = (val_pull - 2000) / 4;
+//        if      (val_ampe > 0)  {SERIAL_PORT_MONITOR.print("current Consumsion: ")                      ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
+//        else if (val_ampe < 0)  {SERIAL_PORT_MONITOR.print("Current Recharge for Battery: ")            ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
+//        else if (val_ampe = 0)  {SERIAL_PORT_MONITOR.println("NONE CURRENT")                            ; }
+//        //////////////////////////////////////////CAN STATUS//////////////////////////
+//        int can =  buf[3];
+//        switch (can)
+//        {
+//          case 148:
+//          {
+//            SERIAL_PORT_MONITOR.println("CAN NETWORK: OFF"); break;
+//          }
+//          case 84:
+//          {
+//            SERIAL_PORT_MONITOR.println("CAN NETWORK: ON"); break;
+//          }
+//          default:
+//          {
+//            SERIAL_PORT_MONITOR.println("CHECKNG CAN NETWORK"); break;
+//          }
+//        }
+        //////////////////////SOC////////////////////
+        int soc_5 = buf[4], soc_6 = buf[5];
+        float soc = ((soc_5 + soc_6) / float(400))*float(100);
+        if (0<=soc<=100) { send_data[7]=soc; }
+        ///////////////////////////////////////////////////////
+        break;
+       }
     }
   }
   
