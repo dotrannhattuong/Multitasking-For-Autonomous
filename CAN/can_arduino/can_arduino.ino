@@ -134,7 +134,7 @@ void loop()
 //            SERIAL_PORT_MONITOR.print("Drive: ");SERIAL_PORT_MONITOR.println(drive);
 //          } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERRO "); }
 
-          //////////////// TEMP BAT + SOC /////////
+          //////////////// TEMP BAT + SOH /////////
           int8_t tpbmi = buf[4], tpbmx = buf[7];
           int32_t temp_bat_min, temp_bat_max, soh_bat = buf[6];
           temp_bat_min= tpbmi - 40;
@@ -161,12 +161,14 @@ void loop()
         int16_t bit_c = buf[1] & 15;
         int16_t bit_t = buf[2];
         int16_t val_pull = (bit_c << 8) | bit_t;
-        int16_t val_ampe = (val_pull - 2000) / 4;
+        int16_t val_ampe = (2000 - val_pull) / 4;
+        
         send_data[12] = val_ampe;
           
         ////////////////////// SOC ////////////////////
-        uint16_t soc_5 = buf[4] << 8, soc_6 = buf[5];
-        float soc = ((soc_5 | soc_6) / float(400))*float(100);
+        uint16_t soc_5 = uint8_t(buf[4]) << 8, soc_6 = buf[5];
+        
+        float soc = ((soc_5 | soc_6) / float(400));
         if (0<=soc<=100) { send_data[7]=soc; }
 
         break;
