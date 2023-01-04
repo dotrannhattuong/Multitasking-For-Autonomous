@@ -6,13 +6,15 @@
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 
-int send_data[13] = {0, 0, 33, 50, 1, 24, 3, 0, 10, 50, 0, 0, 10}; 
-// RPM, SPD, Odometer, Motor Temperator, GEAR, Total Voltage, CHARGING, SOC, Temp_bat_min, Tem_bat_Max, Power, Throttle Possition, Current
+int send_data[14] = {0, 0, 33, 50, 1, 24, 3, 0, 33, 50, 0, 0, 10, 70}; 
+// RPM, SPD, Odometer, Motor Temperator, GEAR, Total Voltage, CHARGING, Battery Distance, Tem_bat_Max, Power, Throttle Possition, Current Accu
 // RPM, SPD(km/h): 415
 // Motor Temperator (oC): 406
 // GEAR(D,N,R), power(NULL, DELIVERY, RECUP), Throttle Possition (%), Total Voltage (V): 1435
 // CHARGING (ERROR, INIT, READY, STOP), POWER OF CHARGE (xem lại), SOC (%), Temp_bat_min(oC), Tem_bat_Max(oC): 1060
-// Odometer: 1369
+// Odometer: 1433
+// Battery Distance: 1374
+// SOC, Current Accu: 341
 
 void setup()
 {
@@ -136,12 +138,12 @@ void loop()
 
           //////////////// TEMP BAT + SOH /////////
           int8_t tpbmi = buf[4], tpbmx = buf[7];
-          int32_t temp_bat_min, temp_bat_max, soh_bat = buf[6];
+          int32_t temp_bat_min, temp_bat_max, soh_bat = buf[5];
           temp_bat_min= tpbmi - 40;
           temp_bat_max= tpbmx - 40;
 
-          send_data[8]=temp_bat_min;
           send_data[9]=temp_bat_max;
+          send_data[13]=soh_bat;
           //-----------------------------------------------------------
           break;
       }
@@ -193,6 +195,16 @@ void loop()
           {  send_data[6]=4;  break; } // START
           }
        }
+
+      //////////// BATTERY DISTANCE ///////////
+      case (1374): //0x55E
+       {
+        uint16_t redis7 = buf[6], redis8 = buf[7];
+        uint16_t battery_distance = redis7 << 8 | redis8;
+        
+        send_data[8] = redis7;
+        break;
+       }
     }
   }
   
@@ -207,7 +219,7 @@ void loop()
       digitalWrite(LED_BUILTIN, HIGH);
     }
 
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < 14; i++)
     {
       Serial.print(send_data[i], DEC);
       Serial.print('\t');

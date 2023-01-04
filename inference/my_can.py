@@ -26,7 +26,7 @@ class CAN:
         self.__name_charging = ['INIT', 'READY', 'CHARGING', 'DRIVING', 'START']
 
         ############ DEBUGING ############
-        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 10, 50, 'NULL', 0, 10]
+        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 33, 50, 'NULL', 0, 10, 70]
 
     def __call__(self):
         if self.__testing == True:

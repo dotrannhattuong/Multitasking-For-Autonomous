@@ -133,18 +133,20 @@ def get_details():
             "Gear": data[4], # OK
             "Odometer": data[2], # OK
             "Speed": data[1], # OK
+            "Distance": data[8], # check lại
         },
         "Motor":{
             "Status": data[10], # check lại
             "Temperature": data[3], # OK
             "RPM": data[0], # OK
-            "Required": data[12] # check lại
+            "Required": data[12], # check lại
         },
         "Battery":{
             "Charge": "ON" if battery_status else "OFF", # check lại
             "SOC": data[7], # check lại
             "Temperature": data[9], # Có nhiệt độ Min-Max
-            "Voltage": data[5] # Check lại do có cái chia 10
+            "Voltage": data[5], # Check lại do có cái chia 10
+            "SOH": data[13], # check lại
         }
     }
     return jsonify(details)
