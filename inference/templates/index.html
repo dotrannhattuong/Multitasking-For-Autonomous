@@ -3,13 +3,13 @@
 <head>
 <style>
 .container {
-  height: 100%;
+  /* height: 100%; */
   width: 100%;
   display: flex;
 }
 .leftThing {
   width: 26%;
-  height: 683px;
+  height: 815px;
   border-style: solid;
   border-radius: 5px;
   padding:10px
@@ -33,10 +33,10 @@
     display: block;
 }
 .chart {
-    max-width:500px;
+    max-width:520px;
     max-height: 500px;
     background: lightgray;
-    margin: 20px auto;
+    margin: 35px auto;
 }
 .default {
     margin: 0px;
@@ -45,10 +45,10 @@
 .logo {
     /* width: 320px; */
     height: 230px;
-    padding-top: 30px;
+    padding-top: 80px;
 }
 .margin{
-    margin: 50px 5px 0px 0px;
+    margin: 100px 5px 0px 0px;
 }
 .margin_left_5{
     margin-left: 5px;
@@ -133,12 +133,12 @@
 	<div class="rightThing">
      	<div class="rightContent">
             <p id="title" class="show default" style="text-align: center;font-size: 20px;font-family: 'Comic Sans MS';color: green;margin-bottom: 15px;">MULTITASKING FOR AUTOMONOUS</p>
-        	<img class="hidden center" src="" width="640px" height="320px" id="img_server" />
-            <video class="hidden center" id="video" width="640px" height="320px" onended="end_video();" autoplay controls multiple></video>
-            <canvas class="hidden center" id="canvas" width="640px" height="320px"></canvas>
-            <image class="hidden center" src="" id = "photo" />
+        	<img class="hidden center" src="" width="700px" height="400px" id="img_server" />
+            <video class="hidden center" id="video" width="700px" height="400px" onended="end_video();" autoplay controls multiple></video>
+            <canvas class="hidden center" id="canvas" width="700px" height="400px"></canvas>
+            <image class="hidden center" src="" id = "photo" width="700px" height="400px" />
       	</div>
-        <div class="rightContent">
+        <div class="rightContent" style="height:342px;" >
             <div class="container">
                 <canvas id="lidar" class="chart hidden"></canvas>
                 <canvas id="speed" class="chart hidden"></canvas>
@@ -492,8 +492,8 @@
                     photo.src = "data:image/png;base64," + imageBase64;
                     changeClass(photo, "hidden","show")
                     changeClass(video, "show", "hidden");
-                    photo.width = res.w;
-                    photo.height = res.h;
+                    // photo.width = res.w;
+                    // photo.height = res.h;
                     send_image();
                 }
             },
