@@ -124,25 +124,24 @@ def get_details():
     gen = np.random.randint
     data = canbus()
 
-    battery_status = False if data[6] in ["OFF","ERROR"] else True
+    battery_status = True if data[6] == 'CHARGING' else False
     # battery_status = True if gen(0, 1000) % 2 ==0 else False
 
     details = {
         "Vehicle":{
-            "Charge": data[6],
+            "Status": data[6],
             "Gear": data[4],
             "Odermeter": data[2],
-            "Speed": data[1]
+            "Speed": data[1],
         },
         "Motor":{
-            "Status": "OFF", ### Chưa tìm ra
+            "Status": data[10],
             "Temperature": data[3],
             "Speed": data[0],
-            "Required": data[3], ### Chưa tìm ra
+            "Required": data[12]
         },
         "Battery":{
-            "Status": data[6], # "ON" if battery_status else "OFF",
-            # "Status": f"{battery_status}", # "ON" if battery_status else "OFF",
+            "Charge": "ON" if battery_status else "OFF",
             "SOC": data[7],
             "Temperature": data[9], 
             "Voltage": data[5] 

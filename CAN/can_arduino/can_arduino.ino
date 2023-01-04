@@ -6,7 +6,8 @@
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 
-int send_data[12] = {0, 0, 33, 50, 1, 24, 3, 0, 10, 50, 0, 0}; // RPM, SPD, Odometer, Motor Temperator, GEAR, Total Voltage, CHARGING, SOC, Temp_bat_min, Tem_bat_Max, Power, Throttle Possition
+int send_data[13] = {0, 0, 33, 50, 1, 24, 3, 0, 10, 50, 0, 0, 10}; 
+// RPM, SPD, Odometer, Motor Temperator, GEAR, Total Voltage, CHARGING, SOC, Temp_bat_min, Tem_bat_Max, Power, Throttle Possition, Current
 // RPM, SPD(km/h): 415
 // Motor Temperator (oC): 406
 // GEAR(D,N,R), power(NULL, DELIVERY, RECUP), Throttle Possition (%), Total Voltage (V): 1435
@@ -57,7 +58,7 @@ void loop()
             int odo = odo1 + odo2;
             
             send_data[2] = odo;
-            ///////////////////////////////
+
             break;
           }
 
@@ -117,21 +118,7 @@ void loop()
         
         case 1060: // 0x424
         {
-          //////////// CHARGING ///////////
-          uint32_t ck_c = buf[0];
-
-          switch (ck_c)
-          {
-          case 9: // 0x9
-          {  send_data[6]=0;  break; } // ERROR
-          case 0: // 0x0
-          {  send_data[6]=1;  break; } // INIT
-          case 17: // 0x11
-          {  send_data[6]=2;  break; } // READY
-          case 18: // 0x12
-          {  send_data[6]=3;  break; } // STOP
-          }
-          //////////////POWER OF CHARGE (RECUP & DRIVE/////////////
+          ////////////// POWER OF CHARGE RECUP & DRIVE /////////////
 //          uint8_t inc, outc;
 //          uint16_t recup , drive;
 //          inc = buf[2]; outc = buf[3];
@@ -170,37 +157,39 @@ void loop()
 //          SERIAL_PORT_MONITOR.print("Power of charging: "       );SERIAL_PORT_MONITOR.print(poc     );SERIAL_PORT_MONITOR.println(" Wat")  ;
 //          SERIAL_PORT_MONITOR.print("Current for charging: "    );SERIAL_PORT_MONITOR.print(aoc     );SERIAL_PORT_MONITOR.println(" A")    ;
 //        }
-//        /////////////////////////////battery current//////////////////////
-//        int16_t bit_c = buf[1] & 15;
-//        int16_t bit_t = buf[2];
-//        int16_t val_pull = (bit_c << 8) | bit_t;
-//        int16_t val_ampe = (val_pull - 2000) / 4;
-//        if      (val_ampe > 0)  {SERIAL_PORT_MONITOR.print("current Consumsion: ")                      ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
-//        else if (val_ampe < 0)  {SERIAL_PORT_MONITOR.print("Current Recharge for Battery: ")            ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
-//        else if (val_ampe = 0)  {SERIAL_PORT_MONITOR.println("NONE CURRENT")                            ; }
-//        //////////////////////////////////////////CAN STATUS//////////////////////////
-//        int can =  buf[3];
-//        switch (can)
-//        {
-//          case 148:
-//          {
-//            SERIAL_PORT_MONITOR.println("CAN NETWORK: OFF"); break;
-//          }
-//          case 84:
-//          {
-//            SERIAL_PORT_MONITOR.println("CAN NETWORK: ON"); break;
-//          }
-//          default:
-//          {
-//            SERIAL_PORT_MONITOR.println("CHECKNG CAN NETWORK"); break;
-//          }
-//        }
-        //////////////////////SOC////////////////////
-        int soc_5 = buf[4], soc_6 = buf[5];
-        float soc = ((soc_5 + soc_6) / float(400))*float(100);
+        ///////////////////////////// Battery Current //////////////////////
+        int16_t bit_c = buf[1] & 15;
+        int16_t bit_t = buf[2];
+        int16_t val_pull = (bit_c << 8) | bit_t;
+        int16_t val_ampe = (val_pull - 2000) / 4;
+        send_data[12] = val_ampe;
+          
+        ////////////////////// SOC ////////////////////
+        uint16_t soc_5 = buf[4] << 8, soc_6 = buf[5];
+        float soc = ((soc_5 | soc_6) / float(400))*float(100);
         if (0<=soc<=100) { send_data[7]=soc; }
         ///////////////////////////////////////////////////////
         break;
+       }
+       
+       case (1061): //0x425
+       {
+          //////////// CHARGING ///////////
+          uint32_t ck_c = buf[0];
+
+          switch (ck_c)
+          {
+          case 29: // 0x1D
+          {  send_data[6]=0;  break; } // INIT
+          case 36: // 0x24
+          {  send_data[6]=1;  break; } // READY
+          case 10: // 0x0A
+          {  send_data[6]=2;  break; } // CHARGING
+          case 42: // 0x2A
+          {  send_data[6]=3;  break; } // DRIVING
+          case 44: // 0x2C
+          {  send_data[6]=4;  break; } // START
+          }
        }
     }
   }
@@ -216,7 +205,7 @@ void loop()
       digitalWrite(LED_BUILTIN, HIGH);
     }
 
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 13; i++)
     {
       Serial.print(send_data[i], DEC);
       Serial.print('\t');

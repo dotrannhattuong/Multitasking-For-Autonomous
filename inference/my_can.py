@@ -22,10 +22,10 @@ class CAN:
         ##########################################################
         self.__name_gear = ['D', 'N', 'R']
         self.__name_power = ['NULL', 'DELIVERY', 'RECUP']
-        self.__name_charging = ['ERROR', 'INIT', 'READY', 'OFF']
+        self.__name_charging = ['INIT', 'READY', 'CHARGING', 'DRIVING', 'START']
 
         ############ DEBUGING ############
-        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 10, 50, 'NULL', 0]
+        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 10, 50, 'NULL', 0, 10]
 
     def __call__(self):
         if self.__testing == True:
