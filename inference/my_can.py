@@ -13,7 +13,8 @@ class CAN:
             self.arduino = serial.Serial(board, baud_rate, timeout=10)
         except:
             self.__testing = True
-
+        
+        print(self.__testing)
         ############ SPEED VISUALIZE ############
         self.__speed = np.zeros(20)
         self.__time = np.zeros(20)
@@ -39,7 +40,8 @@ class CAN:
         self.__data = receive_data.split('\t')
         
         ############ DEBUGING ############
-        if len(self.__data) != 12:
+        
+        if len(self.__data) != len(self.__pre_data):
             return self.__pre_data
 
         ########### Processing ###########

@@ -3,7 +3,7 @@ from flask import Flask, render_template, Response, request, jsonify
 import cv2
 import time
 import numpy as np
-from detection import Multitasking
+# from detection import Multitasking
 from lidar import Lidar
 from my_can import CAN
 
@@ -18,7 +18,7 @@ battery_status = False
 camera = None
 
 # Load model
-model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx', split_frames=1)     
+# model = Multitasking('weights/mobilenetv2_bifpn_sim.onnx', split_frames=1)     
 
 # instatiate flask app  
 app = Flask(__name__, template_folder='./templates')

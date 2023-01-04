@@ -42,7 +42,7 @@ void loop()
           case 415: // 0x19F
           {
             uint16_t value19F = buf[2]<<4 | buf[3] >>4;
-            int32_t Rpm = (value19F - 2000)*10;
+            int16_t Rpm = (value19F - 2000)*10;
             float Spd = (abs(Rpm)/float(7250))*float(80);
 
             send_data[0] = Rpm;
@@ -168,7 +168,7 @@ void loop()
         uint16_t soc_5 = buf[4] << 8, soc_6 = buf[5];
         float soc = ((soc_5 | soc_6) / float(400))*float(100);
         if (0<=soc<=100) { send_data[7]=soc; }
-        ///////////////////////////////////////////////////////
+
         break;
        }
        
