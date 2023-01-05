@@ -98,24 +98,32 @@ void loop()
             }
             
             //////////////// BRAKE PEDAL ////////////////
-            int8_t brake = int8_t(buf[4])>>4;
-            int8_t motor = (int8_t(buf[4])<<4)>>4;
+            int8_t brake = int16_t(buf[4]) >> 4;
             switch(brake)
             {
-              case  4: { send_data[14]=0; } //INACTIVE BRAKING
-              case  6: { send_data[14]=1; } //ACTIVE BRAKING
-              default: { send_data[14]=2; } //ERROR BRAKING
+              case 4: { send_data[14]=0; break; } //INACTIVE BRAKING
+              case 6: { send_data[14]=1; break; } //ACTIVE BRAKING
             }
             
             //////////////// MOTOR STATUS ////////////////
+            int8_t motor = int16_t(buf[4]) & 15;
             switch(motor)
             {
-              case  0: { send_data[10]=0; } //STOP
-              case  4: { send_data[10]=1; } //START
-              case  8: { send_data[10]=2; } //ERROR
+              case  0: { send_data[10]=0; break; } //STOP
+              case  4: { send_data[10]=1; break; } //START
+              case  8: { send_data[10]=2; break; } //ERROR
             }
+
+          //////////////TOTAL VOLTAGE///////////
+//          uint8_t c_volt = buf[5];
+//          int volt;
+//          if ( 0 <= c_volt <= 48 ) 
+//          { 
+//            volt  = c_volt /2; 
+//            send_data[5]=volt;
+//          }
             
-            break;
+          break;
         }
 
         //////////////// TEMP BAT + SOH /////////
@@ -173,14 +181,15 @@ void loop()
         break;
        }
 
-       //////////// TOTAL VOLTAGE ///////////
+//       ////////// TOTAL VOLTAGE ///////////
        case (1375): //0x55F
        {
-        int16_t vol_1= int16_t(buf[5])<<4 | int8_t(buf[6])>>4;
-        int16_t vol_2= int16_t(int8_t (buf[6])<<4)<<4 | int16_t(buf[7]);
-        float total_vol = (vol_1 | vol_2)/float(10);
-        send_data[5]=total_vol;
+        ///////////////////////////////////////////////////VOLTAGE///////////////////////////////////
+        int16_t vol_1 = int16_t(buf[5]) << 4 | int16_t(buf[6]) >> 4;
+        int16_t vol_2 = int16_t(buf[6]&15) << 8 | int16_t(buf[7] );
+        float total_vol = (vol_1 | vol_2) / float(10);  
 
+        send_data[5]=total_vol;
         break;
        }
     }

@@ -147,22 +147,22 @@ void loop()
             else {  SERIAL_PORT_MONITOR.println(" CAN GET TPS");}
             
             ////////////////BRAKE PEDAL & MOTOR STATUS///////////
-            int8_t brake = int8_t(buf[4])>>4;
-            int8_t motor = (int8_t(buf[4])<<4)>>4;
+            int16_t brake = int8_t(buf[4])>>4;
+            int16_t motor = int8_t(buf[4])& 15;
             SERIAL_PORT_MONITOR.print("Braking Status: ");
             switch(brake)
             {
-              case  4: {SERIAL_PORT_MONITOR.println(" INACTIVE BRAKING");}
-              case  6: {SERIAL_PORT_MONITOR.println(" ACTIVE BRAKING");}
-              default: {SERIAL_PORT_MONITOR.println(" ERROR BRAKING");}
+              case  4: {SERIAL_PORT_MONITOR.println(" INACTIVE BRAKING"); break;}
+              case  6: {SERIAL_PORT_MONITOR.println(" ACTIVE BRAKING"); break;}
+              default: {SERIAL_PORT_MONITOR.println(" ERROR BRAKING"); break;}
             }
             SERIAL_PORT_MONITOR.print("Motor Status: ");
             switch(motor)
             {
-              case  0: {SERIAL_PORT_MONITOR.println(" STOP");}
-              case  4: {SERIAL_PORT_MONITOR.println(" START");}
-              case  8: {SERIAL_PORT_MONITOR.println(" ERROR");}
-              default: {SERIAL_PORT_MONITOR.println(" NO DATA");}
+              case  0: {SERIAL_PORT_MONITOR.println(" STOP"); break;}
+              case  4: {SERIAL_PORT_MONITOR.println(" START"); break;}
+              case  8: {SERIAL_PORT_MONITOR.println(" ERROR"); break;}
+              default: {SERIAL_PORT_MONITOR.println(" NO DATA"); break;}
             }
 //          }
 //            //////////////TOTAL VOLTAGE///////////
@@ -237,7 +237,7 @@ void loop()
         int16_t bit_c = buf[1] & 15;
         int16_t bit_t = buf[2];
         int16_t val_pull = (bit_c << 8) | bit_t;
-        int16_t val_ampe = (2000 - val_pull) / 4;
+        int16_t val_ampe = (val_pull - 2000) / 4;
         if      (val_ampe > 0)  {SERIAL_PORT_MONITOR.print("current Consumsion: ")                      ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
         else if (val_ampe < 0)  {SERIAL_PORT_MONITOR.print("Current Recharge for Battery: ")            ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
         else if (val_ampe = 0)  {SERIAL_PORT_MONITOR.println("NONE CURRENT")                            ; }
@@ -306,7 +306,7 @@ void loop()
        case (1364): //0x554
        {
         //////////////////////////////////////////////////TEMP CELL///////////////////////////////////////////
-        int temp_cell_modul = (buf[0]|buf[6])-40;
+        int16_t temp_cell_modul = (buf[0]|buf[6])-40;
         SERIAL_PORT_MONITOR.print("Temp Cell Module: ");SERIAL_PORT_MONITOR.print(temp_cell_modul);SERIAL_PORT_MONITOR.println(" (c)");
         ///////////////////////////////
         break;
@@ -326,9 +326,10 @@ void loop()
        case (1375): //0x55F
        {
         ///////////////////////////////////////////////////VOLTAGE///////////////////////////////////
-        int16_t vol_1= int16_t(buf[5])<<4 | int8_t(buf[6])>>4;
-        int16_t vol_2= int16_t(int8_t (buf[6])<<4)<<4 | int16_t(buf[7]);
-        float total_vol = (vol_1 | vol_2)/float(10);
+        int16_t vol_1 = int16_t(buf[5]) << 4 | int16_t(buf[6]) >> 4;
+        int16_t vol_2 = int16_t(buf[6]&15) << 8 | int16_t(buf[7] );
+        float total_vol = (vol_1 | vol_2) / float(10);  
+
         SERIAL_PORT_MONITOR.print("Total Voltage: ");SERIAL_PORT_MONITOR.print(total_vol);SERIAL_PORT_MONITOR.println(" (V)");
         ///////////////////////////////
         break;
