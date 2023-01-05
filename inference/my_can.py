@@ -22,11 +22,12 @@ class CAN:
 
         ##########################################################
         self.__name_gear = ['D', 'N', 'R']
-        self.__name_power = ['NULL', 'DELIVERY', 'RECUP']
         self.__name_charging = ['INIT', 'READY', 'CHARGING', 'DRIVING', 'START']
+        self.__motor_status = ["STOP", "START", "ERROR"]
+        self.__brake = ['INACTIVE', 'ACTIVE', 'ERROR']
 
         ############ DEBUGING ############
-        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 33, 50, 'NULL', 0, 10, 70]
+        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 33, 50, 'NULL', 0, 10, 70, "INACTIVE"]
 
     def __call__(self):
         if self.__testing == True:
@@ -54,12 +55,17 @@ class CAN:
 
             ######## POWER ########
             id_name_power = self.__data[10]
-            self.__data[10] = self.__name_power[id_name_power]
+            self.__data[10] = self.__motor_status[id_name_power]
 
             ######## CHARGING ########
             id_name_charging = self.__data[6]
             self.__data[6] = self.__name_charging[id_name_charging]
 
+            ######## BRAKING PEDAL ########
+            id_name_charging = self.__data[14]
+            self.__data[14] = self.__brake[id_name_charging]
+            
+            ######## DEBUGING ########
             self.__pre_data = self.__data
 
         except:

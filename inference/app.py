@@ -134,6 +134,8 @@ def get_details():
             "Odometer": data[2], # OK
             "Speed": data[1], # OK
             "Distance": data[8], # check lại
+            "TPS": data[11],
+            "Brake": data[14],
         },
         "Motor":{
             "Status": data[10], # check lại

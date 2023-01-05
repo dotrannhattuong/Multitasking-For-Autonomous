@@ -145,19 +145,37 @@ void loop()
               SERIAL_PORT_MONITOR.print(p_tps); SERIAL_PORT_MONITOR.println(" %");       
             }
             else {  SERIAL_PORT_MONITOR.println(" CAN GET TPS");}
-            ////////////////BRAKE PEDAL///////////
-            //
-            //////////////TOTAL VOLTAGE///////////
-            uint8_t c_volt = buf[5];
-            int volt;
-            if ( 0 <= c_volt <= 48 ) 
-            { 
-              volt  = c_volt /2; 
-              SERIAL_PORT_MONITOR.print("Total Voltage: "); 
-              SERIAL_PORT_MONITOR.print(volt); 
-              SERIAL_PORT_MONITOR.println(" V");           
+            
+            ////////////////BRAKE PEDAL & MOTOR STATUS///////////
+            int8_t brake = int8_t(buf[4])>>4;
+            int8_t motor = (int8_t(buf[4])<<4)>>4;
+            SERIAL_PORT_MONITOR.print("Braking Status: ");
+            switch(brake)
+            {
+              case  4: {SERIAL_PORT_MONITOR.println(" INACTIVE BRAKING");}
+              case  6: {SERIAL_PORT_MONITOR.println(" ACTIVE BRAKING");}
+              default: {SERIAL_PORT_MONITOR.println(" ERROR BRAKING");}
             }
-            else { SERIAL_PORT_MONITOR.println("Total Voltage: CHECK ERROR "); }  
+            SERIAL_PORT_MONITOR.print("Motor Status: ");
+            switch(motor)
+            {
+              case  0: {SERIAL_PORT_MONITOR.println(" STOP");}
+              case  4: {SERIAL_PORT_MONITOR.println(" START");}
+              case  8: {SERIAL_PORT_MONITOR.println(" ERROR");}
+              default: {SERIAL_PORT_MONITOR.println(" NO DATA");}
+            }
+//          }
+//            //////////////TOTAL VOLTAGE///////////
+//            uint8_t c_volt = buf[5];
+//            int volt;
+//            if ( 0 <= c_volt <= 48 ) 
+//            { 
+//              volt  = c_volt /2; 
+//              SERIAL_PORT_MONITOR.print("Total Voltage: "); 
+//              SERIAL_PORT_MONITOR.print(volt); 
+//              SERIAL_PORT_MONITOR.println(" V");           
+//            }
+//            else { SERIAL_PORT_MONITOR.println("Total Voltage: CHECK ERROR "); }  
             //------------------------------------------------------------
             break;
         }
@@ -219,7 +237,7 @@ void loop()
         int16_t bit_c = buf[1] & 15;
         int16_t bit_t = buf[2];
         int16_t val_pull = (bit_c << 8) | bit_t;
-        int16_t val_ampe = (val_pull - 2000) / 4;
+        int16_t val_ampe = (2000 - val_pull) / 4;
         if      (val_ampe > 0)  {SERIAL_PORT_MONITOR.print("current Consumsion: ")                      ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
         else if (val_ampe < 0)  {SERIAL_PORT_MONITOR.print("Current Recharge for Battery: ")            ; SERIAL_PORT_MONITOR.print(val_ampe);SERIAL_PORT_MONITOR.println(" A")  ; }
         else if (val_ampe = 0)  {SERIAL_PORT_MONITOR.println("NONE CURRENT")                            ; }
@@ -278,13 +296,18 @@ void loop()
        case (1433): //0x599
        {
         int odo1 = buf[0], odo2 = buf[3];
-        int odo = odo1 + odo2;
-        SERIAL_PORT_MONITOR.print("Odo Meter: ");SERIAL_PORT_MONITOR.print(odo);SERIAL_PORT_MONITOR.println(" Km");
+        int odo = odo1 | odo2;
+        int bat_dis = buf[5];
+        SERIAL_PORT_MONITOR.print("Odo Meter: ")      ;SERIAL_PORT_MONITOR.print(odo)    ;SERIAL_PORT_MONITOR.println(" Km");
+        SERIAL_PORT_MONITOR.print("Remain Distance: ");SERIAL_PORT_MONITOR.print(bat_dis);SERIAL_PORT_MONITOR.println(" Km");
         ///////////////////////////////
         break;
        }
        case (1364): //0x554
        {
+        //////////////////////////////////////////////////TEMP CELL///////////////////////////////////////////
+        int temp_cell_modul = (buf[0]|buf[6])-40;
+        SERIAL_PORT_MONITOR.print("Temp Cell Module: ");SERIAL_PORT_MONITOR.print(temp_cell_modul);SERIAL_PORT_MONITOR.println(" (c)");
         ///////////////////////////////
         break;
        }
@@ -295,14 +318,26 @@ void loop()
        }
        case (1374): //0x55E
        {
-        uint16_t redis7 = buf[6], redis8 = buf[7];
+        //int16_t redis7 = buf[6], redis8 = buf[7];
         
         ///////////////////////////////
         break;
        }
        case (1375): //0x55F
        {
-        
+        ///////////////////////////////////////////////////VOLTAGE///////////////////////////////////
+        int16_t vol_1= int16_t(buf[5])<<4 | int8_t(buf[6])>>4;
+        int16_t vol_2= int16_t(int8_t (buf[6])<<4)<<4 | int16_t(buf[7]);
+        float total_vol = (vol_1 | vol_2)/float(10);
+        SERIAL_PORT_MONITOR.print("Total Voltage: ");SERIAL_PORT_MONITOR.print(total_vol);SERIAL_PORT_MONITOR.println(" (V)");
+        ///////////////////////////////
+        break;
+       }
+       case (1431): //0x597
+       {
+        ///////////////////////////////////////////////////TEMP CHARGE///////////////////////////////////////
+        int temp_charge = buf[7]-40;
+        SERIAL_PORT_MONITOR.print("Charging Temperature: ");SERIAL_PORT_MONITOR.print(temp_charge);SERIAL_PORT_MONITOR.println(" (C)");
         ///////////////////////////////
         break;
        }

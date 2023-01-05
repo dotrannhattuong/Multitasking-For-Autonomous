@@ -6,15 +6,16 @@
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 
-int send_data[14] = {0, 0, 33, 50, 1, 24, 3, 0, 33, 50, 0, 0, 10, 70}; 
+int send_data[15] = {0, 0, 33, 50, 1, 24, 3, 0, 33, 50, 0, 0, 10, 70, 0}; 
 // RPM, SPD, Odometer, Motor Temperator, GEAR, Total Voltage, CHARGING, Battery Distance, Tem_bat_Max, Power, Throttle Possition, Current Accu
 // RPM, SPD(km/h): 415
 // Motor Temperator (oC): 406
-// GEAR(D,N,R), power(NULL, DELIVERY, RECUP), Throttle Possition (%), Total Voltage (V): 1435
+// GEAR(D,N,R), motor status(STOP, START, ERROR), Throttle Possition (%), Total Voltage (V): 1435
 // CHARGING (ERROR, INIT, READY, STOP), POWER OF CHARGE (xem lại), SOC (%), Temp_bat_min(oC), Tem_bat_Max(oC): 1060
 // Odometer: 1433
 // Battery Distance: 1374
 // SOC, Current Accu: 341
+// Braking
 
 void setup()
 {
@@ -53,19 +54,22 @@ void loop()
             break;
           }
 
-          /////////////////// Odometer ///////////////////
           case 1433: //0x599
-          {            
+          { 
+            /////////////////// Odometer  ///////////////////           
             int odo1 = buf[0], odo2 = buf[3];
             int odo = odo1 + odo2;
-            
             send_data[2] = odo;
 
+            //////////// BATTERY DISTANCE ///////////
+            int bat_dis = buf[5];
+            send_data[8] = bat_dis;
+            
             break;
           }
 
           /////////////////// Motor Temperator ///////////////////
-          case 406: //0x196
+         case 406: //0x196
           {
             uint16_t Temp = buf[5] -40;
             send_data[3] = Temp;
@@ -83,17 +87,7 @@ void loop()
               case 32:  { send_data[4]=1; break; } //0x20 - N
               case 8:   { send_data[4]=2; break; } //0x08 - R
             }
-            
-            /////////////// POWER /////////////////////////
-            uint32_t power = buf[2];
-           
-            if (88<=power<=163)
-            {
-              if (power = 100) { send_data[10]=0; } // NULL
-              else if ( power > 100) { send_data[10]=1; } // DELIVERY
-              else if ( power < 100) { send_data[10]=2; } // RECUP
-            }
-            
+                                
             ///////////// TPS //////////////////
             uint8_t tps = buf[3];
             float p_tps;
@@ -103,62 +97,43 @@ void loop()
               send_data[11]=p_tps; 
             }
             
-            //////////////// BRAKE PEDAL ///////////
-            //
-            
-            ////////////// TOTAL VOLTAGE ///////////
-            uint8_t c_volt = buf[5];
-            uint8_t volt;
-            
-            if ( 0 <= c_volt <= 48 ) 
-            { 
-              volt  = c_volt/2;
-              send_data[5]=volt;
+            //////////////// BRAKE PEDAL ////////////////
+            int8_t brake = int8_t(buf[4])>>4;
+            int8_t motor = (int8_t(buf[4])<<4)>>4;
+            switch(brake)
+            {
+              case  4: { send_data[14]=0; } //INACTIVE BRAKING
+              case  6: { send_data[14]=1; } //ACTIVE BRAKING
+              default: { send_data[14]=2; } //ERROR BRAKING
             }
-           break;
+            
+            //////////////// MOTOR STATUS ////////////////
+            switch(motor)
+            {
+              case  0: { send_data[10]=0; } //STOP
+              case  4: { send_data[10]=1; } //START
+              case  8: { send_data[10]=2; } //ERROR
+            }
+            
+            break;
         }
-        
-        case 1060: // 0x424
-        {
-          ////////////// POWER OF CHARGE RECUP & DRIVE /////////////
-//          uint8_t inc, outc;
-//          uint16_t recup , drive;
-//          inc = buf[2]; outc = buf[3];
-//          recup = inc * 500;
-//          drive = outc * 500; 
-//          if (0 <= recup <= 30000)
-//          {
-//            SERIAL_PORT_MONITOR.print("Max Recup: ");SERIAL_PORT_MONITOR.println(recup);
-//            
-//          } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERROR "); }
-//          if ( 0 <= drive <= 30000)
-//          {
-//            SERIAL_PORT_MONITOR.print("Drive: ");SERIAL_PORT_MONITOR.println(drive);
-//          } else {  SERIAL_PORT_MONITOR.println("Max Recup: ERRO "); }
 
-          //////////////// TEMP BAT + SOH /////////
+        //////////////// TEMP BAT + SOH /////////
+      case 1060: // 0x424
+        { 
           int8_t tpbmi = buf[4], tpbmx = buf[7];
           int32_t temp_bat_min, temp_bat_max, soh_bat = buf[5];
           temp_bat_min= tpbmi - 40;
           temp_bat_max= tpbmx - 40;
-
+  
           send_data[9]=temp_bat_max;
           send_data[13]=soh_bat;
-          //-----------------------------------------------------------
+          
           break;
       }
+      
       case(341): // 0x155
       {
-        //////////////////////buf0////charging/////////
-//        int32_t val_charge = buf[0];
-//        int32_t poc, aoc;
-//        if (0<=val_charge<=7)
-//        {
-//          poc = val_charge *300;
-//          aoc = val_charge * 5;
-//          SERIAL_PORT_MONITOR.print("Power of charging: "       );SERIAL_PORT_MONITOR.print(poc     );SERIAL_PORT_MONITOR.println(" Wat")  ;
-//          SERIAL_PORT_MONITOR.print("Current for charging: "    );SERIAL_PORT_MONITOR.print(aoc     );SERIAL_PORT_MONITOR.println(" A")    ;
-//        }
         ///////////////////////////// Battery Current //////////////////////
         int16_t bit_c = buf[1] & 15;
         int16_t bit_t = buf[2];
@@ -170,7 +145,7 @@ void loop()
         ////////////////////// SOC ////////////////////
         uint16_t soc_5 = uint8_t(buf[4]) << 8, soc_6 = buf[5];
         
-        float soc = ((soc_5 | soc_6) / float(400));
+        float soc = abs((soc_5 | soc_6) / float(400));
         if (0<=soc<=100) { send_data[7]=soc; }
 
         break;
@@ -178,31 +153,34 @@ void loop()
        
        case (1061): //0x425
        {
-          //////////// CHARGING ///////////
-          uint32_t ck_c = buf[0];
+        //////////// CHARGING ///////////
+        uint32_t ck_c = buf[0];
 
-          switch (ck_c)
-          {
-          case 29: // 0x1D
-          {  send_data[6]=0;  break; } // INIT
-          case 36: // 0x24
-          {  send_data[6]=1;  break; } // READY
-          case 10: // 0x0A
-          {  send_data[6]=2;  break; } // CHARGING
-          case 42: // 0x2A
-          {  send_data[6]=3;  break; } // DRIVING
-          case 44: // 0x2C
-          {  send_data[6]=4;  break; } // START
-          }
+        switch (ck_c)
+        {
+        case 29: // 0x1D
+        {  send_data[6]=0;  break; } // INIT
+        case 36: // 0x24
+        {  send_data[6]=1;  break; } // READY
+        case 10: // 0x0A
+        {  send_data[6]=2;  break; } // CHARGING
+        case 42: // 0x2A
+        {  send_data[6]=3;  break; } // DRIVING
+        case 44: // 0x2C
+        {  send_data[6]=4;  break; } // START TRICKLE CHARGING
+        }
+
+        break;
        }
 
-      //////////// BATTERY DISTANCE ///////////
-      case (1374): //0x55E
+       //////////// TOTAL VOLTAGE ///////////
+       case (1375): //0x55F
        {
-        uint16_t redis7 = buf[6], redis8 = buf[7];
-        uint16_t battery_distance = redis7 << 8 | redis8;
-        
-        send_data[8] = redis7;
+        int16_t vol_1= int16_t(buf[5])<<4 | int8_t(buf[6])>>4;
+        int16_t vol_2= int16_t(int8_t (buf[6])<<4)<<4 | int16_t(buf[7]);
+        float total_vol = (vol_1 | vol_2)/float(10);
+        send_data[5]=total_vol;
+
         break;
        }
     }
@@ -219,7 +197,7 @@ void loop()
       digitalWrite(LED_BUILTIN, HIGH);
     }
 
-    for (int i = 0; i < 14; i++)
+    for (int i = 0; i < 15; i++)
     {
       Serial.print(send_data[i], DEC);
       Serial.print('\t');
