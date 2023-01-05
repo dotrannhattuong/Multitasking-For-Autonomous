@@ -27,7 +27,7 @@ class CAN:
         self.__brake = ['INACTIVE', 'ACTIVE', 'ERROR']
 
         ############ DEBUGING ############
-        self.__pre_data = [0, 0, 33, 50, 'N', 24, 'OFF', 0, 33, 50, 'NULL', 0, 10, 70, "INACTIVE"]
+        self.__pre_data = [0, 0, 33, 50, 'N', 56, 'OFF', 0, 33, 50, 'NULL', 0, 10, 70, "INACTIVE"]
 
     def __call__(self):
         if self.__testing == True:
