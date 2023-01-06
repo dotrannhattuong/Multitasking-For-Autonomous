@@ -14,7 +14,8 @@ class CAN:
         except:
             self.__testing = True
         
-        print(self.__testing)
+        print(f"Testing CAN: {self.__testing}")
+
         ############ SPEED VISUALIZE ############
         self.__speed = np.zeros(20)
         self.__time = np.zeros(20)

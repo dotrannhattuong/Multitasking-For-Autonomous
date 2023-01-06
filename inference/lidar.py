@@ -14,7 +14,9 @@ class Lidar:
             self.ser = serial.Serial(board, baud, timeout=0.01)
         except:
             self.__testing = True
-    
+
+        print(f"Testing LIDAR: {self.__testing}")
+
     def __call__(self):
         if self.__testing == True:
             return [0], [0]
