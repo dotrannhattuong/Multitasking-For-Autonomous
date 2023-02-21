@@ -147,4 +147,12 @@ sudo chmod a+rw /dev/ttyUSB0
 ```
 
 ## <div align="center">References</div>
-https://github.com/phongkhanh/multitask_car
+
+```
+@article{scribano2022cerberus,
+  title={CERBERUS: Simple and Effective All-In-One Automotive Perception Model with Multi Task Learning},
+  author={Scribano, Carmelo and Franchini, Giorgia and Olmedo, Ignacio Sanudo and Bertogna, Marko},
+  journal={arXiv preprint arXiv:2210.00756},
+  year={2022}
+}
+```
